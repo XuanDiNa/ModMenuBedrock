@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 2,
+  "plugin": {"id": "ExamplePlugin", "entry": "ExamplePlugin.dll", "versions": ["1.0.0"]},
+  "config": {"file": "settings.json", "reload": "hot"},
+  "fields": [
+    {"path": "/height", "type": "slider", "numberType": "integer", "min": -64, "max": 320, "step": 1, "default": 192,
+     "label": {"en_US": "Height", "zh_TW": "高度", "zh_CN": "高度"},
+     "description": {"en_US": "Author template only. Drag to adjust, or click the number to type.", "zh_TW": "僅供作者參考。拖曳調整，或點擊數字直接輸入。", "zh_CN": "仅供作者参考。拖动调整，或点击数字直接输入。"}},
+    {"path": "/scale", "type": "slider", "numberType": "decimal", "precision": 2, "min": 0.5, "max": 2, "step": 0.05, "default": 1, "unit": "x",
+     "label": {"en_US": "Scale", "zh_TW": "比例", "zh_CN": "比例"}},
+    {"path": "/offset", "type": "slider", "numberType": "decimal", "precision": 2, "min": -1, "max": 1, "step": 0.01, "default": -0.25,
+     "label": {"en_US": "Signed offset", "zh_TW": "正負偏移", "zh_CN": "正负偏移"}}
+  ]
+}

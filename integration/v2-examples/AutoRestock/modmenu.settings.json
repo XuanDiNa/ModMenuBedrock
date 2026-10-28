@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 2,
+  "plugin": {"id": "AutoRestock", "entry": "AutoRestock.dll", "versions": ["0.3.1-test4"]},
+  "config": {"file": "config.json", "reload": "hot"},
+  "fields": [
+    {"path": "/enabled", "type": "boolean", "default": true,
+     "label": {"en_US": "Enabled", "zh_TW": "啟用", "zh_CN": "启用"}},
+    {"path": "/preRestockThreshold", "type": "slider", "numberType": "integer", "min": 1, "max": 64, "step": 1, "default": 6,
+     "label": {"en_US": "Restock below", "zh_TW": "低於此數量補貨", "zh_CN": "低于此数量补货"},
+     "description": {"en_US": "Strictly below this count: 17 means 16 or fewer. This optional descriptor does not change the DLL.", "zh_TW": "嚴格低於此數量；17 代表 16 或以下。此選用描述檔不修改 DLL。", "zh_CN": "严格低于此数量；17 代表 16 或以下。此可选描述文件不修改 DLL。"}}
+  ]
+}

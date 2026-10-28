@@ -1,0 +1,104 @@
+add_rules("mode.debug", "mode.release")
+set_languages("c++20")
+set_allowedplats("windows")
+set_allowedarchs("x64")
+set_targetdir("build/$(plat)/$(arch)/$(mode)")
+add_requires("minhook 1.3.4", {configs = {shared = false}})
+
+target("ModMenuBedrock")
+    set_kind("shared")
+    add_files("src/*.cpp", "src/PointerBridge.asm")
+    add_includedirs("include", "vendor/json")
+    add_packages("minhook")
+    add_syslinks("bcrypt", "user32")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+    set_runtimes("MT")
+target_end()
+
+local shared_ui = {
+    "src/Core.cpp", "src/Configure.cpp", "src/View.cpp", "src/Locale.cpp",
+    "src/Settings.cpp", "src/SettingsInput.cpp", "src/SettingsSchema.cpp",
+    "src/SettingsDescription.cpp", "src/Slider.cpp", "src/Storage.cpp"
+}
+
+local function ui_test(name, tests, native)
+    target("ModMenu" .. name .. "Tests")
+        set_kind("binary")
+        add_files(table.unpack(tests))
+        add_files(table.unpack(shared_ui))
+        add_includedirs("include", "vendor/json")
+        add_syslinks("user32", "bcrypt")
+        add_cxflags("/utf-8", "/W4", "/EHsc")
+        if native then
+            add_files("src/Definition.cpp", "src/NativeProfile.cpp", "src/PointerBridge.asm")
+            add_packages("minhook")
+        end
+    target_end()
+end
+
+ui_test("Core", {"tests/CoreTests.cpp"})
+ui_test("View", {"tests/ViewTests.cpp"})
+ui_test("NativeCallback", {"tests/NativeCallbackTests.cpp"}, true)
+ui_test("Isolated", {"tests/IsolatedSettingsTests.cpp"})
+ui_test("AdapterUi", {"tests/AdapterUiTests.cpp"})
+ui_test("Slider", {"tests/SliderTests.cpp"})
+ui_test("PointerChain", {"tests/PointerChainTests.cpp"}, true)
+
+-- SettingsTransactionTests includes Settings.cpp to exercise its private helpers.
+-- Do not link a second Settings.cpp object into this target.
+target("ModMenuSettingsTests")
+    set_kind("binary")
+    add_files("tests/SettingsTests.cpp", "tests/SettingsTransactionTests.cpp", "tests/ExternalSettingsTests.cpp", "tests/SettingsAdapterTests.cpp")
+    add_files("src/Storage.cpp", "src/SettingsSchema.cpp", "src/SettingsDescription.cpp", "src/SettingsInput.cpp", "src/Slider.cpp")
+    add_includedirs("include", "vendor/json")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuStorageTests")
+    set_kind("binary")
+    add_files("tests/StorageTests.cpp", "src/Storage.cpp")
+    add_includedirs("include", "vendor/json")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuNativeTests")
+    set_kind("binary")
+    add_files("tests/NativeTests.cpp", "src/NativeProfile.cpp")
+    add_includedirs("include")
+    add_syslinks("bcrypt")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuDefinitionTests")
+    set_kind("binary")
+    add_files("tests/DefinitionTests.cpp", "src/Definition.cpp")
+    add_includedirs("include", "vendor/json")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuHookFixture")
+    set_kind("shared")
+    add_files("tests/HookFixture.cpp")
+    add_packages("minhook")
+    set_runtimes("MT")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuHookTests")
+    set_kind("binary")
+    add_files("tests/HookTests.cpp")
+    add_packages("minhook")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuPointerBridgeTests")
+    set_kind("binary")
+    add_files("tests/PointerBridgeTests.cpp", "src/PointerBridge.asm")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
+target("ModMenuSmokeTests")
+    set_kind("binary")
+    add_files("tests/SmokeTests.cpp")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModMenuBedrock",
+  "type": "object",
+  "properties": {
+    "openKey": {"type":"integer","anyOf":[{"const":0},{"minimum":8,"maximum":254,"not":{"enum":[16,17,18,27,91,92,93]}}],"default":121,"description":"Windows virtual-key code. 0 means unbound; native Mods buttons remain available. F10=121. Restart the game after manual edits."},
+    "button": {
+      "type":"object",
+      "properties": {
+        "anchor":{"type":"integer","minimum":0,"maximum":3,"default":0,"description":"0 top-left, 1 top-right, 2 bottom-left, 3 bottom-right"},
+        "x":{"type":"number","minimum":-32768,"maximum":32768,"default":12},
+        "y":{"type":"number","minimum":-32768,"maximum":32768,"default":12},
+        "scale":{"type":"number","minimum":0.5,"maximum":2.0,"default":1.0}
+      }
+    }
+  }
+}
