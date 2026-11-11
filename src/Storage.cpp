@@ -34,7 +34,7 @@ std::string String(Json const& j,char const* key,std::string fallback={},std::si
     for(std::size_t p=0;(p=s.find("\xc2\xa7",p))!=std::string::npos;)s.replace(p,2,"?");
     return s;
 }
-bool ConfigValid(Config const& c){return (!c.openKey || UsableKey(c.openKey)) &&
+bool ConfigValid(Config const& c){return modmenu::binding::Valid({c.openKey,c.openModifiers}) &&
     c.button.anchor>=0 && c.button.anchor<=3 && std::isfinite(c.button.x) && std::isfinite(c.button.y) &&
     std::abs(c.button.x)<=32768 && std::abs(c.button.y)<=32768 && std::isfinite(c.button.scale) && c.button.scale>=.5f && c.button.scale<=2.f;}
 }
@@ -51,7 +51,7 @@ bool ValidUtf8(std::string const& s){
 }
 bool LoadConfig(fs::path const& path,Config& out){
     try{auto j=Read(path);if(!j.is_object())return false;Config c;
-        if(j.contains("openKey")){if(!j["openKey"].is_number_unsigned() && !j["openKey"].is_number_integer())return false;auto k=j["openKey"].get<std::int64_t>();if(k<0 || k>=255)return false;c.openKey=unsigned(k);}
+        if(j.contains("openKey")){auto const& value=j["openKey"];if(value.is_string()){auto b=modmenu::binding::Parse(value.get<std::string>());if(!b)return false;c.openKey=b->key;c.openModifiers=b->modifiers;}else{if(!value.is_number_integer())return false;auto k=value.get<std::int64_t>();if(k<0 || k>=255)return false;c.openKey=unsigned(k);}}
         if(j.contains("button")){auto const& b=j["button"];if(!b.is_object())return false;
             if(b.contains("anchor")){if(!b["anchor"].is_number_integer())return false;c.button.anchor=b["anchor"].get<int>();}
             if(b.contains("x"))c.button.x=b["x"].get<float>();if(b.contains("y"))c.button.y=b["y"].get<float>();if(b.contains("scale"))c.button.scale=b["scale"].get<float>();
@@ -61,7 +61,7 @@ bool LoadConfig(fs::path const& path,Config& out){
 bool SaveConfig(fs::path const& path,Config const& c){
     try{if(!ConfigValid(c) || !Safe(path.parent_path()))return false;
         if(fs::exists(path) && !Safe(path))return false;
-        Json j={{"openKey",c.openKey},{"button",{{"anchor",c.button.anchor},{"x",c.button.x},{"y",c.button.y},{"scale",c.button.scale}}}};auto bytes=j.dump(2)+"\n";
+        Json j={{"openKey",c.openKey},{"button",{{"anchor",c.button.anchor},{"x",c.button.x},{"y",c.button.y},{"scale",c.button.scale}}}};if(c.openModifiers)j["openKey"]=modmenu::binding::Token({c.openKey,c.openModifiers});auto bytes=j.dump(2)+"\n";
         auto tmp=path;tmp+=L".tmp-"+std::to_wstring(GetCurrentProcessId())+L"-"+std::to_wstring(GetTickCount64());
         auto h=CreateFileW(tmp.c_str(),GENERIC_WRITE,0,nullptr,CREATE_NEW,FILE_ATTRIBUTE_NORMAL|FILE_FLAG_WRITE_THROUGH,nullptr);if(h==INVALID_HANDLE_VALUE)return false;
         DWORD used{};bool ok=WriteFile(h,bytes.data(),DWORD(bytes.size()),&used,nullptr) && used==bytes.size() && FlushFileBuffers(h);CloseHandle(h);
