@@ -1,7 +1,7 @@
 {
   "id": "mod-menu-bedrock",
   "name": "ModMenuBedrock",
-  "version": "0.6.0-test5-leftalt",
+  "version": "0.5.0-test1",
   "author": "XuanDiNa",
   "description": "Native main and pause menu plugin browser for Minecraft Bedrock. No LeviLamina API or resource pack is required.",
   "platform": "windows-x64",

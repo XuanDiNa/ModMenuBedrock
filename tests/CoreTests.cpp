@@ -144,9 +144,9 @@ int main(){
         Check(shortcut.open,"new press after returning to pause still works");
         auto background=pause;background.foreground=false;shortcut.PollShortcut(true,background);
         shortcut.PollShortcut(true,pause);
-        Check(shortcut.open,"focus loss retains page and held key cannot toggle on refocus");
+        Check(!shortcut.open,"focus loss closes and held key cannot reopen on refocus");
         shortcut.PollShortcut(false,pause);shortcut.PollShortcut(true,pause);
-        Check(!shortcut.open,"fresh shortcut after foreground release closes retained page");
+        Check(shortcut.open,"shortcut works after foreground release and repress");
     }
     {
         Frame main{640,360,true,true,false,MenuScene::Main},pause{640,360,true,true,false,MenuScene::Pause};Menu shortcut;
@@ -246,7 +246,7 @@ int main(){
         sample[117]=false;keys.PollKeyboard(sample,pause);keys.keyCapture=true;
         auto background=pause;background.foreground=false;sample[118]=true;keys.PollKeyboard(sample,background);
         keys.PollKeyboard(sample,pause);
-        Check(keys.open && !keys.keyCapture && keys.config.openKey==117,"background capture is cancelled without rebinding or leaving retained page");
+        Check(!keys.open && keys.config.openKey==117,"background capture cannot rebind or reopen on foreground return");
         keys.PollKeyboard(sample,{640,360,false,true});sample[27]=true;keys.PollKeyboard(sample,{640,360,false,true});
         Check(!keys.open && keys.config.openKey==117,"unknown HUD inventory or settings samples cannot act on Escape or binding");
     }
@@ -377,7 +377,7 @@ int main(){
         auto sibling=pause;sibling.eligible=false;sibling.observerOnly=true;search.PollKeyboard(sample,sibling);search.PollKeyboard(sample,pause);
         Check(search.query=="a","observer sibling neither types nor erases the top search key edge");
         auto unfocused=pause;unfocused.foreground=false;sample['B']=true;search.PollKeyboard(sample,unfocused);search.PollKeyboard(sample,pause);
-        Check(search.open && !search.searchFocus && search.query=="a" && !search.TakePasteRequest(pause),"focus loss retains catalog but cancels text authority and held typing");
+        Check(!search.open && search.query=="a" && !search.TakePasteRequest(pause),"focus loss cancels text authority and does not type held keys on return");
         search.Input({Kind::Text,0,0,0,0,"secret"},{640,360,false,true});
         Check(search.query=="a","HUD inventory and unknown scenes cannot accept search text");
     }
@@ -477,7 +477,7 @@ int main(){
         key(13);key(40);key(40);key(13);
         Check(std::get<int>(editor.draft.fields[7].value)==2 && editor.choiceField==-1,"choice popup supports keyboard selection and commit");
         editor.Tick({640,360,true,false,false,MenuScene::Pause});
-        Check(editor.configuring && editor.choiceField==-1 && editor.editField==-1 && std::get<int>(editor.draft.fields[7].value)==2,"focus loss cancels shared-control state and retains unsent draft");
+        Check(!editor.configuring && editor.choiceField==-1 && editor.editField==-1 && editor.draft.fields.empty(),"focus loss discards shared-control state and unsent draft");
     }
     {
         Frame pause{640,360,true,true,false,MenuScene::Pause};Menu editor;editor.nativeEntry=true;editor.OpenNative(pause);editor.configuring=true;

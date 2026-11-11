@@ -195,7 +195,7 @@ int main(){
   search.searchFocus=true;search.Input({menu::Kind::Key,0,0,'V',0},pauseFrame);search.Input(paste,pauseFrame);
   auto background=pauseFrame;background.foreground=false;menu::PasteIfRequested(search,background,ReadTestClipboard);
   menu::PasteIfRequested(search,pauseFrame,ReadTestClipboard);
-  check(search.open && !search.searchFocus && search.query=="物品物品" && clipboardReads==2,"background adapter retains page but cancels search without clipboard read on refocus");
+  check(!search.open && search.query=="物品物品" && clipboardReads==2,"background adapter closes stale search without reading clipboard on refocus");
   menu::Menu numbers;numbers.nativeEntry=true;numbers.OpenNative(pauseFrame);numbers.configuring=true;numbers.draft.valid=true;
   numbers.draft.fields=menu::SettingsSchema("AutoRestock").fields;numbers.fieldSelected=1;
   numbers.Input({menu::Kind::Key,0,0,13,1},pauseFrame);numbers.Input(paste,pauseFrame);

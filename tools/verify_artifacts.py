@@ -3,7 +3,7 @@ import argparse,hashlib,json,struct,zipfile,re
 from pathlib import Path,PurePosixPath
 def require(ok,message):
     if not ok:raise RuntimeError(message)
-def pe(path,workspace_api=False,workspace_example=False):
+def pe(path):
     data=path.read_bytes();require(data[:2]==b'MZ','MZ missing')
     off=struct.unpack_from('<I',data,60)[0];require(64<=off<=4096 and data[off:off+4]==b'PE\0\0','PE missing')
     machine,count,_,_,_,optsize,flags=struct.unpack_from('<HHIIIHH',data,off+4)
@@ -19,13 +19,10 @@ def pe(path,workspace_api=False,workspace_example=False):
         raise RuntimeError('Unmapped RVA')
     def string(value):
         p=rva(value);end=data.find(b'\0',p,min(len(data),p+1024));require(end>=p,'Unbounded PE string');return data[p:end].decode('ascii')
-    exports=set();export=struct.unpack_from('<I',data,opt+112)[0];require(export or workspace_example,'No exports')
-    if export:
-        p=rva(export);n=struct.unpack_from('<I',data,p+24)[0];names=struct.unpack_from('<I',data,p+32)[0];require(n<=100,'Too many exports')
-        for i in range(n):exports.add(string(struct.unpack_from('<I',data,rva(names)+i*4)[0]))
-    expected=set() if workspace_example else {'MMB_GetStatus','MMB_GetVersion'}
-    if workspace_api:expected.update({'MMB_WorkspaceRegisterV1','MMB_WorkspacePublishV1','MMB_WorkspacePollV1','MMB_WorkspaceUnregisterV1'})
-    require(exports==expected,'Unexpected exports: '+str(exports))
+    exports=set();export=struct.unpack_from('<I',data,opt+112)[0];require(export,'No exports')
+    p=rva(export);n=struct.unpack_from('<I',data,p+24)[0];names=struct.unpack_from('<I',data,p+32)[0];require(n<=100,'Too many exports')
+    for i in range(n):exports.add(string(struct.unpack_from('<I',data,rva(names)+i*4)[0]))
+    require(exports=={'MMB_GetStatus','MMB_GetVersion'},'Unexpected exports: '+str(exports))
     imports=[];symbols=[];imp=struct.unpack_from('<I',data,opt+120)[0]
     if imp:
         for n in range(128):
@@ -45,7 +42,7 @@ def pe(path,workspace_api=False,workspace_example=False):
     require(not any('vcruntime' in x.lower() or 'msvcp' in x.lower() for x in imports),'Shipping plugin needs nonstatic CRT')
     return {'machine':'AMD64','exports':sorted(exports),'imports':imports,'sha256':hashlib.sha256(data).hexdigest().upper(),'size':len(data)}
 def package(path,payload):
-    root=payload.name+'/';files={p.relative_to(payload).as_posix():p for p in payload.rglob('*') if p.is_file()}
+    root='ModMenuBedrock/';files={p.relative_to(payload).as_posix():p for p in payload.rglob('*') if p.is_file()}
     with zipfile.ZipFile(path) as z:
         actual={n for n in z.namelist() if not n.endswith('/')}
         require(actual=={root+n for n in files},'ZIP payload differs from frozen tree')
@@ -61,7 +58,7 @@ def package(path,payload):
         require(hashlib.sha256(files[name].read_bytes()).hexdigest().upper()==digest,'Payload checksum mismatch: '+name)
     require(covered==set(files)-{'SHA256SUMS.txt'},'Checksum coverage mismatch')
     return {'members':len(files),'zip_sha256':hashlib.sha256(path.read_bytes()).hexdigest().upper()}
-p=argparse.ArgumentParser();p.add_argument('--dll',type=Path,required=True);p.add_argument('--zip',type=Path);p.add_argument('--payload',type=Path);g=p.add_mutually_exclusive_group();g.add_argument('--workspace-api',action='store_true');g.add_argument('--workspace-example',action='store_true');a=p.parse_args()
-report={'dll':pe(a.dll,a.workspace_api,a.workspace_example)}
+p=argparse.ArgumentParser();p.add_argument('--dll',type=Path,required=True);p.add_argument('--zip',type=Path);p.add_argument('--payload',type=Path);a=p.parse_args()
+report={'dll':pe(a.dll)}
 if a.zip:require(a.payload is not None,'payload required');report['package']=package(a.zip,a.payload)
 print(json.dumps(report,indent=2))

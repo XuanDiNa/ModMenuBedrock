@@ -57,8 +57,7 @@ struct Fixture {
     Menu menu;
     Fixture() {
         auto temp = fs::temp_directory_path();
-        static unsigned serial{};
-        root = temp / (L"ModMenuIsolated-" + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64())+L"-"+std::to_wstring(++serial));
+        root = temp / (L"ModMenuIsolated-" + std::to_wstring(GetCurrentProcessId()) + L"-" + std::to_wstring(GetTickCount64()));
         if (!fs::create_directory(root)) throw std::runtime_error("Isolated root already exists");
         directory = root / "ExamplePlugin";
         fs::create_directory(directory);
@@ -185,11 +184,8 @@ void CaptureAndCancellation() {
     Check(f.menu.choiceField == -1 && f.menu.settingsRequest == Menu::Request::None,
           "click outside an external popup does not click through to Apply");
     auto lost = f.frame; lost.foreground = false; f.menu.Tick(lost);
-    Check(f.menu.open && f.menu.configuring && f.menu.captureField == -1 &&
-          f.menu.choiceField == -1 && f.menu.editField == -1 &&
-          SettingText(f.menu.draft.fields[3]) == "F10" && f.menu.settingsChanged &&
-          f.menu.settingsRequest == Menu::Request::None && Snapshot(f.root) == before,
-          "focus loss retains external draft but cancels control state without writing");
+    Check(!f.menu.open && !f.menu.configuring && f.menu.draft.fields.empty() && Snapshot(f.root) == before,
+          "focus loss discards external key edits and control state without writing");
 }
 
 void RefusalAndRecovery() {

@@ -1,6 +1,5 @@
 #include "ModMenu/NativeHost.h"
 #include "ModMenu/Storage.h"
-#include "ModMenu/Clipboard.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
@@ -21,7 +20,7 @@ DWORD WINAPI Worker(void*){
         auto dir=Directory();if(dir.empty()){state.status.store(4);return 0;}
         std::ofstream log(dir/L"ModMenuBedrock.log",std::ios::app);
         auto write=[&](std::string const& s){log<<GetTickCount64()<<' '<<s<<'\n';log.flush();};
-        write("ModMenuBedrock 0.6.0-test5-leftalt; pid="+std::to_string(GetCurrentProcessId())+"; unchanged exact three-version profiles / settings v1+v2+v3 / opt-in generic workspaces and worker mailbox / no payload logging; x64; no LeviLamina");
+        write("ModMenuBedrock 0.5.0-test1; pid="+std::to_string(GetCurrentProcessId())+"; unchanged exact three-version profiles / shared fixed-precision sliders / settings descriptions v1+v2 / Escape unbind / caller-preserving pointer bridge / game-language UI / loaded-only catalog; x64; no LeviLamina");
         menu::ProfileDiagnostic diagnostic;
         if(!profile.Initialize(GetModuleHandleW(nullptr),&diagnostic)){state.status.store(1);write("INACTIVE: "+menu::DescribeProfileDiagnostic(diagnostic));return 0;}
         write(std::string("Verified native profile: ")+profile.Version());
@@ -52,14 +51,6 @@ DWORD WINAPI Worker(void*){
         auto lastCatalog=GetTickCount64()-2000,lastLog=GetTickCount64();unsigned long long priorFaults{};unsigned loggedReceipts{};
         while(true){
             auto now=GetTickCount64();
-            auto snapshots=menu::Workspaces().Snapshots();
-            {std::lock_guard lock(state.mutex);auto&m=state.menu;m.workspaces=std::move(snapshots);if(m.workspaceOpen){auto s=m.WorkspaceFor(m.workspace.snapshot.definition->id);if(s&&s->session==m.workspace.snapshot.session)m.workspace.Accept(*s);else{m.workspaceOpen=false;m.workspace.Clear();}}}
-            bool paste=false,copy=false;std::uint64_t editGeneration{};std::string copied;
-            {std::lock_guard lock(state.mutex);auto&m=state.menu;
-             if(m.workspaceOpen){paste=m.workspace.paste;copy=m.workspace.copy;editGeneration=m.workspace.editGeneration|(std::uint64_t(1)<<63);copied=m.workspace.editor.Selection();m.workspace.paste=m.workspace.copy=false;}
-             else{paste=m.clipboardPaste;copy=m.clipboardCopy;editGeneration=m.clipboardGeneration;copied=m.clipboardText;m.clipboardPaste=m.clipboardCopy=false;}}
-            if(copy)menu::WriteEditorClipboard(copied);
-            if(paste){auto text=menu::ReadEditorClipboard();std::lock_guard lock(state.mutex);state.menu.CompleteClipboard(editGeneration,text);}
             if(now-lastCatalog>=2000){auto fresh=menu::LoadedCatalog(mods,Loaded);
                 for(auto& e:fresh){auto support=menu::InspectSettings(mods,e.id);e.settingsAvailable=support.available;e.settingsReason=std::move(support.reason);}
                 for(auto& e:fresh)if(e.id==dir.filename().string())e.status=state.status.load()==3?"Ready":"Inactive";
@@ -100,7 +91,7 @@ DWORD WINAPI Worker(void*){
 }
 }
 extern "C" __declspec(dllexport) int MMB_GetStatus(){return state.status.load(std::memory_order_acquire);}
-extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.6.0-test5-leftalt";}
+extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.5.0-test1";}
 BOOL APIENTRY DllMain(HMODULE instance,DWORD reason,LPVOID){
     if(reason==DLL_PROCESS_ATTACH){module=instance;auto thread=CreateThread(nullptr,0,Worker,nullptr,0,nullptr);if(thread)CloseHandle(thread);else state.status.store(4);}
     return TRUE;

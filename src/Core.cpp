@@ -4,8 +4,6 @@
 #include <algorithm>
 #include <cmath>
 namespace menu {
-WorkspaceSnapshot const* Menu::WorkspaceFor(std::string const&id)const{for(auto const&s:workspaces)if(s.definition&&s.definition->id==id)return &s;return nullptr;}
-void Menu::CompleteClipboard(std::uint64_t generation,std::string const&text){constexpr auto domain=std::uint64_t(1)<<63;constexpr auto empty="Clipboard is empty, unreadable or exceeds limits.";if((generation&domain)&&workspaceOpen&&!workspace.editing.empty()&&(generation&~domain)==workspace.editGeneration){if(text.empty()){workspace.notice=empty;return;}workspace.editor.Insert(text);workspace.notice=workspace.editor.error;}else if(!(generation&domain)&&configuring&&textEditorActive&&generation==textGeneration){if(text.empty()){numberError=empty;return;}textEditor.Insert(text);numberText=textEditor.value;numberError=textEditor.error;}}
 MenuScene ClassifyMenuScene(std::string_view name){
     if(name=="start_screen")return MenuScene::Main;
     if(name=="pause_screen")return MenuScene::Pause;
@@ -68,52 +66,18 @@ Layout Arrange(Config const& c,Frame const& f) {
     l.fields={pad,58,w,std::max(24.f,f.height-144)};
     l.row=24;l.visible=std::max(1,int(l.list.h/l.catalogRow));l.fieldVisible=std::max(1,int(l.fields.h/l.row));return l;
 }
-void Menu::SuspendInput() {
-    if(focusSuspended_)return;
-    focusSuspended_=awaitingKeyboard_=true;
-    for(unsigned k=0;k<held_.size();++k)releaseKeys_[k]=releaseKeys_[k] || held_[k] || capturedKeys_[k];
-    releaseButtons_|=capturedButtons_;
-    if(!workspace.pressed.empty())releaseButtons_|=1u<<1;
-    if(editing){editing=false;open=settings=true;}
-    keyCapture=searchFocus=pressed_=dragging_=false;action_=0;
-    workspace.SuspendInput();ClearSettingControl();
-    clipboardPaste=clipboardCopy=pasteRequested_=false;searchRepeatKey_=0;searchRepeatAt_=0;
-    shortcutPrimed_=keyboardPrimed_=false;previousKeys_.fill(false);
-    held_.fill(false);capturedKeys_.fill(false);capturedButtons_=0;
-    mappedCount_=0;mappedOverflow_=false;
-}
 void Menu::Tick(Frame const& f) {
-    if(!keyCapture && !(configuring && captureField>=0)){bindingCapture_.Cancel();bindingTarget_=-3;}
     if(f.observerOnly && f.foreground)return;
-    bool knownOrigin=origin_==MenuScene::Main || origin_==MenuScene::Pause;
-    // A verified background sibling carries no viewport/category. It cannot
-    // invalidate (or resume) the independently verified top menu's navigation.
-    if(f.observerOnly && !f.foreground && knownOrigin){SuspendInput();return;}
     if(sliderField_>=0 && (f.width!=sliderWidth_ || f.height!=sliderHeight_))CancelSlider();
     bool sceneChanged=f.eligible && f.scene!=MenuScene::Unknown && origin_!=MenuScene::Unknown && origin_!=f.scene;
-    if(sceneChanged || !f.eligible || (knownOrigin && f.scene==MenuScene::Unknown) ||
-       f.width<240 || f.height<160 || (!f.foreground && !knownOrigin)){
+    if(sceneChanged || !f.eligible || !f.foreground || f.width<240 || f.height<160){
         open=settings=editing=keyCapture=searchFocus=pressed_=dragging_=false;
-        bindingCapture_.Cancel();bindingTarget_=-3;
-        workspaceOpen=false;workspace.Clear();clipboardPaste=clipboardCopy=false;
         shortcutPrimed_=false;
         keyboardPrimed_=false;previousKeys_.fill(false);
         pasteRequested_=false;searchRepeatKey_=0;searchRepeatAt_=0;
         mappedCount_=0;mappedOverflow_=false;
         held_.fill(false);capturedKeys_.fill(false);capturedButtons_=0;action_=0;
-        focusSuspended_=awaitingKeyboard_=false;releaseKeys_.fill(false);releaseButtons_=0;
         if(configuring){configuring=settingsBusy=settingsChanged=false;settingsRequest=Request::None;draft={};++settingsGeneration;ClearSettingControl();}
-    }else if(!f.foreground){
-        SuspendInput();return;
-    }else if(focusSuspended_){
-        focusSuspended_=false;
-        // Cached host-owned snapshots only; no provider callbacks or work
-        // cancellation on the render/input thread. A new session is a new UI.
-        if(workspaceOpen){
-            auto s=workspace.snapshot.definition?WorkspaceFor(workspace.snapshot.definition->id):nullptr;
-            if(!s || s->session!=workspace.snapshot.session){workspaceOpen=false;workspace.Clear();}
-            else workspace.Accept(*s);
-        }
     }
     // An owned category, never a native scene pointer. Native eligibility is
     // independently established for every callback; this only cancels stale UI.
@@ -124,7 +88,7 @@ void Menu::Tick(Frame const& f) {
     fieldSelected=std::clamp(fieldSelected,0,std::max(0,int(draft.fields.size())-1));
     fieldScroll=std::clamp(fieldScroll,0,std::max(0,int(VisibleSettings(*this).size())-l.fieldVisible));
 }
-bool Menu::PollShortcut(bool down,Frame const& f,Modifiers mods) {
+bool Menu::PollShortcut(bool down,Frame const& f) {
     Tick(f);
     if(f.observerOnly && f.foreground)return false;
     if(!f.eligible || !f.foreground || f.width<240 || f.height<160 ||
@@ -137,9 +101,8 @@ bool Menu::PollShortcut(bool down,Frame const& f,Modifiers mods) {
         shortcutPrimed_=false;return false;
     }
     auto key=config.openKey;
-    if(!down)releaseKeys_[key]=false;
-    if(!shortcutPrimed_ || shortcutKey_!=key || shortcutModifiers_!=config.openModifiers){
-        shortcutPrimed_=true;shortcutKey_=key;shortcutModifiers_=config.openModifiers;
+    if(!shortcutPrimed_ || shortcutKey_!=key){
+        shortcutPrimed_=true;shortcutKey_=key;
         // Entering an eligible scene/refocusing while already held is not a
         // new shortcut press. A released sample still clears any raw capture.
         if(down){held_[key]=true;return false;}
@@ -147,7 +110,7 @@ bool Menu::PollShortcut(bool down,Frame const& f,Modifiers mods) {
     // Native raw receipt and the local sample share this held/capture state.
     // Either order handles one physical press once; releases cannot stick.
     if(down==held_[key])return false;
-    auto consumed=Input({Kind::Key,0,0,int(key),down?1:0,{},mods},f);
+    auto consumed=Input({Kind::Key,0,0,int(key),down?1:0},f);
     return down && consumed;
 }
 bool Menu::PollKeyboard(std::array<bool,256> const& keys,Frame const& f,bool caps,std::uint64_t now) {
@@ -157,30 +120,28 @@ bool Menu::PollKeyboard(std::array<bool,256> const& keys,Frame const& f,bool cap
        (f.scene!=MenuScene::Main && f.scene!=MenuScene::Pause)){
         keyboardPrimed_=false;shortcutPrimed_=false;return false;
     }
-    Modifiers mods{keys[16] || keys[0xA0] || keys[0xA1],keys[17] || keys[0xA2] || keys[0xA3],keys[18] || keys[0xA4] || keys[0xA5],caps,keys[0xA4]};
     if(!keyboardPrimed_){
         keyboardPrimed_=true;previousKeys_=keys;
         // Refocus/scene entry is not a new press, including keys held before
         // capture. Raw receipts and samples use the same repeat bookkeeping.
-        for(unsigned k=8;k<255;++k){held_[k]=keys[k];if(awaitingKeyboard_)releaseKeys_[k]=keys[k];}
-        awaitingKeyboard_=false;
-        return PollShortcut(config.openKey<keys.size() && keys[config.openKey],f,mods);
+        for(unsigned k=8;k<255;++k)if(keys[k])held_[k]=true;
+        return PollShortcut(config.openKey<keys.size() && keys[config.openKey],f);
     }
     auto previous=previousKeys_;previousKeys_=keys;
     // Releases must run even after Escape closes our modal or capture ends.
     for(unsigned k=8;k<255;++k)if(!keys[k] && (previous[k] || capturedKeys_[k]))
-        Input({Kind::Key,0,0,int(k),0,{},mods},f);
+        Input({Kind::Key,0,0,int(k),0},f);
     bool capture=keyCapture || (configuring && captureField>=0);
     bool escape=keys[27] && !previous[27];
     bool capturedPress=false;
     if(escape && (open || editing) && !held_[27]){
-        Input({Kind::Key,0,0,27,1,{},mods},f);capturedPress=true;
+        Input({Kind::Key,0,0,27,1},f);capturedPress=true;
     }else if(capture){
         // Escape wins over simultaneous candidates. Generic modifiers are
         // aliases, not bindable keys; their left/right versions are distinct.
         for(unsigned k=8;k<255 && !escape;++k){
             if(k==16 || k==17 || k==18 || k==27 || !keys[k] || previous[k] || held_[k])continue;
-            Input({Kind::Key,0,0,int(k),1,{},mods},f);
+            Input({Kind::Key,0,0,int(k),1},f);
             if(!keyCapture && !(configuring && captureField>=0))break;
         }
     }
@@ -188,14 +149,15 @@ bool Menu::PollKeyboard(std::array<bool,256> const& keys,Frame const& f,bool cap
     // same frame. Prime its current state so only a later fresh press acts.
     if(capture || capturedPress){
         searchRepeatKey_=0;searchRepeatAt_=0;
-        shortcutPrimed_=true;shortcutKey_=config.openKey;shortcutModifiers_=config.openModifiers;
+        shortcutPrimed_=true;shortcutKey_=config.openKey;
         if(config.openKey<keys.size() && keys[config.openKey])held_[config.openKey]=true;
         return false;
     }
-    if(configuring || workspaceOpen){
-        for(unsigned k=8;k<255 && (configuring || workspaceOpen);++k){
+    Modifiers mods{keys[16] || keys[0xA0] || keys[0xA1],keys[17] || keys[0xA2] || keys[0xA3],keys[18] || keys[0xA4] || keys[0xA5],caps};
+    if(configuring){
+        for(unsigned k=8;k<255 && configuring;++k){
             if(k==27 || k==config.openKey || !keys[k] || previous[k] || held_[k])continue;
-            if(k==8 || k==9 || k==13 || k==32 || k==35 || k==36 || k==37 || k==38 || k==39 || k==40 || k==46 || !AsciiKey(k,mods.shift,mods.caps).empty())
+            if(k==8 || k==9 || k==13 || k==32 || k==37 || k==38 || k==39 || k==40 || k==46 || !AsciiKey(k,mods.shift,mods.caps).empty())
                 Input({Kind::Key,0,0,int(k),1,{},mods},f);
         }
     }
@@ -214,34 +176,7 @@ bool Menu::PollKeyboard(std::array<bool,256> const& keys,Frame const& f,bool cap
             SearchKey(searchRepeatKey_,mods);searchRepeatAt_=now+50;
         }
     }
-    return PollShortcut(config.openKey<keys.size() && keys[config.openKey],f,mods);
-}
-void Menu::BeginBindingCapture(int target){
-    auto sample=previousKeys_;
-    for(unsigned k=0;k<sample.size();++k)sample[k]=sample[k]||held_[k];
-    bindingTarget_=target;bindingCapture_.Begin(sample,target>=0?draft.fields[target].bindingModifiers:modmenu::binding::AllModifiers);
-}
-bool Menu::CaptureBindingKey(unsigned key,bool down,Modifiers mods,std::array<bool,256> const& before){
-    int target=keyCapture?-2:(configuring&&captureField>=0&&captureField<int(draft.fields.size())&&draft.fields[captureField].type==SettingType::Binding?captureField:-3);
-    if(target==-3){bindingCapture_.Cancel();bindingTarget_=-3;return false;}
-    if(settingsBusy)return true;
-    if(target!=bindingTarget_||!bindingCapture_.Active()){bindingTarget_=target;bindingCapture_.Begin(before,target>=0?draft.fields[target].bindingModifiers:modmenu::binding::AllModifiers);}
-    auto sample=held_;sample[16]=mods.shift;sample[17]=mods.control;sample[164]=mods.leftAlt;
-    auto result=bindingCapture_.Event(key,down,sample);
-    if(result){
-        if(target==-2){config.openKey=result->key;config.openModifiers=result->modifiers;keyCapture=false;dirty=true;}
-        else{auto& field=draft.fields[target];auto old=field.value;if(!SetBinding(field,*result)){bindingCapture_.Begin(sample,field.bindingModifiers);return true;}settingsChanged=settingsChanged||old!=field.value;captureField=-1;}
-        bindingTarget_=-3;
-    }
-    return true;
-}
-std::string Menu::BindingCaptureCaption()const{
-    auto mask=bindingCapture_.PendingModifiers();
-    std::string prefix=(mask&modmenu::binding::Ctrl?"Ctrl+":"");
-    if(mask&modmenu::binding::Shift)prefix+="Shift+";
-    if(mask&modmenu::binding::LeftAlt)prefix+="LAlt+";
-    if(!prefix.empty())return prefix+"...";
-    return Tr(locale,bindingCapture_.NeedsPrimary()?"Press a primary key (Esc unbinds)":"Press key (Esc unbinds)");
+    return PollShortcut(config.openKey<keys.size() && keys[config.openKey],f);
 }
 bool Menu::TakePasteRequest(Frame const& f){
     Tick(f);
@@ -286,24 +221,11 @@ bool Menu::Input(Event const& e,Frame const& f) {
     auto l=Arrange(config,f);
     if(e.kind==Kind::Key){
         if(e.code<0 || e.code>255)return open;
-        auto k=static_cast<unsigned>(e.code);
-        // Raw input may precede the first physical sample after refocus.
-        // Only the separately primed shortcut has its own sample boundary.
-        if(e.value && (releaseKeys_[k] || (awaitingKeyboard_ && (k!=config.openKey || !shortcutPrimed_)))){
-            releaseKeys_[k]=held_[k]=true;return open || editing;
-        }
-        if(!e.value)releaseKeys_[k]=false;
-        auto before=held_;bool repeat=held_[k];held_[k]=e.value!=0;
-        if((!e.value || !repeat) && CaptureBindingKey(k,e.value!=0,e.modifiers,before)){
-            if(e.value)capturedKeys_[k]=true;else capturedKeys_[k]=false;return true;
-        }
+        auto k=static_cast<unsigned>(e.code);bool repeat=held_[k];held_[k]=e.value!=0;
         if(!e.value){bool consumed=capturedKeys_[k];capturedKeys_[k]=false;return consumed || open || editing;}
-        auto mask=BindingModifiers(e.modifiers,k);
-        bool shortcut=config.openKey && k==config.openKey && mask==config.openModifiers;
-        bool consume=open || editing || shortcut;
+        bool consume=open || editing || (config.openKey && k==config.openKey);
         if(!consume)return false;
         capturedKeys_[k]=true;
-        if(workspaceOpen){workspace.Input(e,f,repeat);if(workspace.close){workspaceOpen=false;workspace.Clear();}return true;}
         if(configuring){
             auto consumed=ConfigureKey(k,e.modifiers,repeat);
             auto visible=VisibleSettings(*this);auto at=std::find(visible.begin(),visible.end(),fieldSelected);
@@ -321,7 +243,7 @@ bool Menu::Input(Event const& e,Frame const& f) {
         if(SearchActive() && (k!=config.openKey || k==8 || k==9 || k==13 || !AsciiKey(k,false,false).empty())){
             if(!repeat)SearchKey(k,e.modifiers);return true;
         }
-        if(shortcut){open=!open;editing=settings=searchFocus=false;return true;}
+        if(config.openKey && k==config.openKey){open=!open;editing=settings=searchFocus=false;return true;}
         if(open && !settings){
             auto n=int(Filtered().size());
             if(k==38)selected=std::max(0,selected-1);
@@ -334,15 +256,6 @@ bool Menu::Input(Event const& e,Frame const& f) {
         }
         return true;
     }
-    unsigned bit=e.code>0 && e.code<8?1u<<e.code:0;
-    if((e.kind==Kind::Down || e.kind==Kind::Up) && (releaseButtons_&bit)){
-        if(e.kind==Kind::Up)releaseButtons_&=~bit;
-        return open || editing;
-    }
-    if(e.kind==Kind::Down && (open || editing))capturedButtons_|=bit;
-    if(e.kind==Kind::Up && workspaceOpen)capturedButtons_&=~bit;
-    // NativeHost mapped Down/Up use this pointer even while Workspace owns input.
-    if(workspaceOpen){if(e.kind==Kind::Move){pointerX=e.x;pointerY=e.y;}workspace.Input(e,f,false);if(workspace.close){workspaceOpen=false;workspace.Clear();}return true;}
     if(e.kind==Kind::Text){if(configuring)ConfigureText(e.text);else if(SearchActive())AppendSearch(e.text);return open;}
     if(e.kind==Kind::Move){
         pointerX=e.x;pointerY=e.y;
@@ -352,6 +265,7 @@ bool Menu::Input(Event const& e,Frame const& f) {
     }
     if(e.kind==Kind::Wheel){if(sliderField_>=0)return true;if(configuring){if(choiceField<0 && editField<0)fieldScroll=std::clamp(fieldScroll-std::clamp(e.value,-10000,10000),0,std::max(0,int(VisibleSettings(*this).size())-l.fieldVisible));}
         else if(open && !settings){auto n=int(Filtered().size());auto steps=std::clamp(e.value,-10000,10000);scroll=std::clamp(scroll-steps,0,std::max(0,n-l.visible));}return open || editing;}
+    unsigned bit=e.code>0 && e.code<8?1u<<e.code:0;
     if(e.kind==Kind::Down){
         bool consume=open || editing || (!nativeEntry && l.button.Contains(e.x,e.y) && e.code==1) || dragging_;
         if(!consume)return false;
@@ -374,7 +288,7 @@ bool Menu::Input(Event const& e,Frame const& f) {
             searchFocus=l.search.Contains(e.x,e.y);
             if(l.done.Contains(e.x,e.y))action_=2;
             else if(l.settings.Contains(e.x,e.y))action_=8;
-            else if(l.configure.Contains(e.x,e.y)){action_=10;auto filtered=Filtered();if(selected>=0&&selected<int(filtered.size())){auto const&entry=entries[filtered[selected]];if(WorkspaceFor(entry.id)&&(!Configurable(entry)||e.x>=l.configure.x+(l.configure.w+4)/2))action_=30;}}
+            else if(l.configure.Contains(e.x,e.y))action_=10;
             else if(l.list.Contains(e.x,e.y)){row_=scroll+int((e.y-l.list.y)/l.catalogRow);action_=9;}
         }return true;
     }
@@ -386,13 +300,12 @@ bool Menu::Input(Event const& e,Frame const& f) {
         if(dragging_){dragging_=false;return true;}
         if(configuring){ConfigureClick(action_,row_,e,f);action_=0;return consume;}
         switch(action_){
-        case 30:{auto filtered=Filtered();if(selected>=0&&selected<int(filtered.size())&&l.configure.Contains(e.x,e.y)){auto const&entry=entries[filtered[selected]];if(!Configurable(entry)||e.x>=l.configure.x+(l.configure.w+4)/2)if(auto s=WorkspaceFor(entry.id)){workspace.Open(*s);workspaceOpen=true;searchFocus=false;}}break;}
         case 1:if(l.button.Contains(e.x,e.y))open=true;break;
         case 2:if(l.done.Contains(e.x,e.y)){open=false;searchFocus=false;}break;
         case 3:if(l.back.Contains(e.x,e.y)){settings=false;keyCapture=false;}break;
         case 4:if(l.edit.Contains(e.x,e.y)){open=false;editing=true;}break;
         case 5:if(l.reset.Contains(e.x,e.y)){config.button={};dirty=true;}break;
-        case 6:if(l.key.Contains(e.x,e.y)){keyCapture=true;BeginBindingCapture(-2);}break;
+        case 6:if(l.key.Contains(e.x,e.y))keyCapture=true;break;
         case 7:if(l.scale.Contains(e.x,e.y)){config.button.scale=config.button.scale>=2?.5f:config.button.scale+.25f;dirty=true;}break;
         case 8:if(l.settings.Contains(e.x,e.y)){settings=true;searchFocus=false;}break;
         case 9:if(l.list.Contains(e.x,e.y) && row_==scroll+int((e.y-l.list.y)/l.catalogRow) && row_<scroll+l.visible && row_<int(Filtered().size()))selected=row_;break;

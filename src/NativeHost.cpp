@@ -210,8 +210,7 @@ bool NativeInput(Event const& e,void* scene){
     try{auto f=SafeFrame(scene);std::lock_guard lock(shared->mutex);auto input=e;
         if(input.kind==Kind::Key && f.eligible && f.foreground && !f.observerOnly){
             input.modifiers={(GetAsyncKeyState(VK_SHIFT)&0x8000)!=0,(GetAsyncKeyState(VK_CONTROL)&0x8000)!=0,
-                (GetAsyncKeyState(VK_MENU)&0x8000)!=0,(GetKeyState(VK_CAPITAL)&1)!=0,
-                (GetAsyncKeyState(VK_LMENU)&0x8000)!=0};
+                (GetAsyncKeyState(VK_MENU)&0x8000)!=0,(GetKeyState(VK_CAPITAL)&1)!=0};
         }
         auto consumed=shared->menu.Input(input,f);PasteIfRequested(shared->menu,f);
         if(consumed)shared->inputs.fetch_add(1);return consumed;}

@@ -25,7 +25,6 @@ std::vector<std::string> Lines(std::string const& s,float width,int max){
 }
 }
 std::vector<Paint> BuildView(Menu const& m,Frame const& f){
-    if(m.open&&m.workspaceOpen&&f.eligible&&f.foreground&&!f.observerOnly&&f.width>=240&&f.height>=160)return m.workspace.View(f,m.locale);
     std::vector<Paint> out;if(f.observerOnly || !f.eligible || f.width<240 || f.height<160)return out;
     Color bg{0,0,0,.38f},panel{0,0,0,.62f},button{.32f,.32f,.32f,1},accent{.66f,.69f,.72f,1},white{1,1,1,1},muted{.66f,.66f,.66f,1};
     auto t=[&](std::string_view s){return Tr(m.locale,s);};
@@ -87,10 +86,10 @@ std::vector<Paint> BuildView(Menu const& m,Frame const& f){
                 text({box.x+3,box.y+7,box.w-6,9},value,white,.8f);
             }else if(field.type==SettingType::Text){
                 fill(row.value,{.03f,.03f,.03f,1});border(row.value,m.editField==row.index?white:Color{.4f,.4f,.4f,1});
-                auto value=m.editField==row.index?(field.external&&m.textEditorActive?m.textEditor.Visible(std::max(1,int((row.value.w-6)/6))):m.numberText+"_"):setting(field);
+                auto value=m.editField==row.index?m.numberText+"_":setting(field);
                 // Keep the caret visible while editing long mappings; text() also clips.
                 int count=std::max(1,int((row.value.w-6)/(6*.8f)));
-                if(m.editField==row.index && !field.external && int(value.size())>count)value=value.substr(value.size()-count);
+                if(m.editField==row.index && int(value.size())>count)value=value.substr(value.size()-count);
                 text({row.value.x+3,row.value.y+7,row.value.w-6,9},value,white,.8f);
             }else if(field.type==SettingType::Boolean){
                 fill(row.value,{.06f,.06f,.06f,1});border(row.value,{.4f,.4f,.4f,1});
@@ -98,8 +97,8 @@ std::vector<Paint> BuildView(Menu const& m,Frame const& f){
                 if(on){fill({check.x+3,check.y+5,2,3},white);fill({check.x+5,check.y+3,3,2},white);}
                 text({row.value.x+23,row.value.y+7,row.value.w-26,10},setting(field),on?white:muted,.8f);
             }else{
-                auto copy=field;bool canUnbind=(field.type==SettingType::Key || field.type==SettingType::Binding) && SetKey(copy,27);
-                auto value=row.index==m.captureField?(field.type==SettingType::Binding?m.BindingCaptureCaption():t(canUnbind?"Press key (Esc unbinds)":"Press key (Esc cancels)")):setting(field);
+                auto copy=field;bool canUnbind=field.type==SettingType::Key && SetKey(copy,27);
+                auto value=row.index==m.captureField?t(canUnbind?"Press key (Esc unbinds)":"Press key (Esc cancels)"):setting(field);
                 if(field.type==SettingType::Choice)value+=" v";
                 control(row.value,value,!m.settingsBusy);
             }
@@ -142,7 +141,7 @@ std::vector<Paint> BuildView(Menu const& m,Frame const& f){
     }
     if(m.settings){
         if(!m.nativeEntry){control(l.edit,t("Move Mods button"));control(l.reset,t("Reset position"));control(l.scale,t("Button scale: ")+std::to_string(m.config.button.scale).substr(0,4));}
-        control(l.key,m.keyCapture?m.BindingCaptureCaption():t("Open key: ")+(m.config.openKey?modmenu::binding::Token({m.config.openKey,m.config.openModifiers}):t("Unbound")));control(l.back,t("Back"));
+        control(l.key,m.keyCapture?t("Press key (Esc unbinds)"):t("Open key: ")+(m.config.openKey?std::to_string(m.config.openKey):t("Unbound")));control(l.back,t("Back"));
         float x=180,w=std::max(0.f,f.width-x-12);
         text({x,55,w,12},t("Saved to this plugin's config.json"),muted,.8f);
         text({x,75,w,12},t("F10 is the default, not a reserved key."),muted,.8f);
@@ -188,9 +187,7 @@ std::vector<Paint> BuildView(Menu const& m,Frame const& f){
         text({hx,l.details.y+13,hw,9},e.version.empty()?t("Version unknown"):e.version,muted,.75f);
         text({hx,l.details.y+23,hw,9},e.author.empty()?t("Author not provided"):(m.locale==Locale::English?"By ":m.locale==Locale::TraditionalChinese?"作者：":"作者：")+e.author,muted,.7f);
         text({l.details.x+4,l.details.y+35,l.details.w-8,8},t(e.status),muted,.65f);
-        auto configure=l.configure;
-        if(m.WorkspaceFor(e.id)){Rect work=configure;if(Configurable(e)){configure.w=(configure.w-4)/2;work.x=configure.x+configure.w+4;work.w=configure.w;}control(work,t("Workspace"));}
-        if(Configurable(e)||!m.WorkspaceFor(e.id))control(configure,t(Configurable(e)?"Configure":"No settings available"),Configurable(e));
+        control(l.configure,t(Configurable(e)?"Configure":"No settings available"),Configurable(e));
         fill(l.description,panel);border(l.description,{.25f,.25f,.25f,.9f});
         float x=l.description.x+6,y=l.description.y+6,w=std::max(0.f,l.description.w-12);
         auto line=[&](std::string const& s,Color color,float scale=.8f){if(y+10<=l.description.y+l.description.h-4){text({x,y,w,10},s,color,scale);y+=11;}};

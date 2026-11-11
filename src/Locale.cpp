@@ -12,20 +12,6 @@ Locale LocaleFromCode(std::string_view code) noexcept{
 namespace {
 struct Translation{std::string_view en,tw,cn;};
 constexpr Translation words[]={
- {"Workspace","工作頁","工作页"},{"Unavailable","無法使用","不可用"},{"No results","沒有結果","没有结果"},{"Confirm","確認","确认"},
- {"Explicit actions only; closing does not stop jobs.","操作須明確觸發；關閉頁面不會停止工作。","操作须明确触发；关闭页面不会停止工作。"},
- {"Waiting for provider state.","等候插件回報狀態。","等待插件返回状态。"},
- {"Action completed.","操作已完成。","操作已完成。"},{"Action failed.","操作失敗。","操作失败。"},
- {"Action is unavailable or busy.","操作目前無法使用或忙碌中。","操作当前不可用或正忙。"},
- {"Command submitted; waiting for provider result.","已提交操作，等候插件回報結果。","已提交操作，等待插件返回结果。"},
- {"State changed; activate the action again.","狀態已變更，請重新點選操作。","状态已变化，请重新选择操作。"},
- {"Workspace unavailable or changed; try again.","工作頁無法使用或已變更，請重試。","工作页不可用或已变化，请重试。"},
- {"Invalid text field.","文字欄位無效。","文本字段无效。"},{"Missing form value.","缺少表單欄位。","缺少表单字段。"},
- {"Waiting for the previous action result.","等候上一次操作結果。","等待上一次操作结果。"},
- {"Command queue is full.","操作佇列已滿。","操作队列已满。"},{"Form exceeds command size limit.","表單超過操作資料長度限制。","表单超过操作数据长度限制。"},
- {"Text is invalid or exceeds its UTF-8 byte limit.","文字無效或超過 UTF-8 長度限制。","文本无效或超过 UTF-8 长度限制。"},
- {"Clipboard is empty, unreadable or exceeds limits.","剪貼簿為空、無法讀取或超過限制。","剪贴板为空、无法读取或超过限制。"},
- {"Text does not match the declared format or UTF-8 byte limits.","文字不符合格式或 UTF-8 長度限制。","文本不符合格式或 UTF-8 长度限制。"},
  {"Enter a value on the declared slider step within its range.","請輸入範圍內且符合滑桿步進的數值。","请输入范围内且符合滑块步进的数值。"},
  {"Drag to adjust; click the number to type.","拖曳調整；點擊數字可直接輸入。","拖动调整；点击数字可直接输入。"},
  {"Advanced keys","進階按鍵","高级按键"},
@@ -56,7 +42,6 @@ constexpr Translation words[]={
  {"Single keyboard key, including digits and punctuation. Saved in the plugin's native VK format. Escape unbinds the key.","單一鍵盤按鍵，支援數字與標點；以插件原生 VK 格式儲存。Escape 解除綁定。","单个键盘按键，支持数字与标点；以插件原生 VK 格式保存。Escape 解除绑定。"},
  {"Unbound","無綁定","未绑定"},
  {"Press key (Esc unbinds)","請按鍵（Esc 解除綁定）","请按键（Esc 解除绑定）"},
- {"Press a primary key (Esc unbinds)","請按主鍵（Esc 解除綁定）","请按主键（Esc 解除绑定）"},
  {"Mods","模組","模组"},{"Settings","設定","设置"},{"Done","完成","完成"},{"Configure","設定插件","配置插件"},
  {"Back","返回","返回"},{"Apply","套用","应用"},{"Cancel","取消","取消"},{"Reset","重設","重置"},{"Reset all","全部重設","全部重置"},
  {"Search mods...","搜尋模組…","搜索模组…"},{"Native client plugins","原生客戶端插件","原生客户端插件"},
@@ -161,7 +146,7 @@ std::string DisplayOption(SettingField const& f,std::size_t index,Locale locale)
 }
 std::string DisplaySetting(SettingField const& f,Locale locale){
  if(f.type==SettingType::Choice)if(auto n=std::get_if<int>(&f.value);n && *n>=0)return DisplayOption(f,std::size_t(*n),locale);
- if(f.type==SettingType::Key || f.type==SettingType::Binding){auto caption=SettingKeyCaption(f);return caption=="Unbound"?Tr(locale,caption):caption;}
+ if(f.type==SettingType::Key){auto caption=SettingKeyCaption(f);return caption=="Unbound"?Tr(locale,caption):caption;}
  auto s=SettingText(f);return f.type==SettingType::Text?s:Tr(locale,s);
 }
 std::string DisplayMessage(std::string_view s,Locale locale){

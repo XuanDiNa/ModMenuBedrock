@@ -74,8 +74,8 @@ SettingsDefinition ParseSettingsDescription(std::string const& bytes,std::string
  };
  auto j=Json::parse(bytes,callback);Members(j,{"$schema","schemaVersion","plugin","config","fields"});
  Require(j.contains("schemaVersion"),"Unsupported settings description version");auto schemaVersion=Integer(j.at("schemaVersion"));
- Require(schemaVersion>=1 && schemaVersion<=5,"Unsupported settings description version");
- auto numbers=schemaVersion>=2?ReadNumberTokens(bytes):NumberTokens{};
+ Require(schemaVersion==1 || schemaVersion==2,"Unsupported settings description version");
+ auto numbers=schemaVersion==2?ReadNumberTokens(bytes):NumberTokens{};
  if(j.contains("$schema"))(void)Text(j.at("$schema"),512);
  auto const& plugin=j.at("plugin");Members(plugin,{"id","entry","versions"});
  Require(SafeSettingsId(id) && Text(plugin.at("id"),120)==id,"Description plugin ID mismatch");
@@ -94,9 +94,7 @@ SettingsDefinition ParseSettingsDescription(std::string const& bytes,std::string
  std::size_t fieldIndex{};
  for(auto const& raw:fields){
   if(schemaVersion==1)Members(raw,{"path","type","default","label","category","description","min","max","step","unit","options","keys"});
-  else if(schemaVersion==2)Members(raw,{"path","type","default","label","category","description","min","max","step","unit","options","keys","numberType","precision"});
-  else if(schemaVersion==3)Members(raw,{"path","type","default","label","category","description","min","max","step","unit","options","keys","numberType","precision","minBytes","maxBytes","validation"});
-  else Members(raw,{"path","type","default","label","category","description","min","max","step","unit","options","keys","numberType","precision","minBytes","maxBytes","validation","legacyNumericStrings"});
+  else Members(raw,{"path","type","default","label","category","description","min","max","step","unit","options","keys","numberType","precision"});
   SettingField f;f.external=true;f.path=Text(raw.at("path"),256);Pointer(f.path);
   for(auto const& p:paths)Require(p!=f.path && !p.starts_with(f.path+"/") && !f.path.starts_with(p+"/"),"Overlapping description fields");paths.insert(f.path);
   f.labelText=Caption(raw.at("label"),160);f.label=f.labelText.en;
@@ -109,12 +107,7 @@ SettingsDefinition ParseSettingsDescription(std::string const& bytes,std::string
    Require(f.minimum<=f.maximum,"Invalid description numeric range");f.value=Integer(value);
    if(raw.contains("step")){f.step=Integer(raw.at("step"));Require(f.step>0,"Invalid description numeric step");}
    if(raw.contains("unit"))f.unit=Text(raw.at("unit"),16);
-  }else if(type=="text" && schemaVersion>=3){
-   f.type=SettingType::Text;f.textFormat=TextFormat::Public;f.minBytes=Integer(raw.at("minBytes"));f.maxBytes=Integer(raw.at("maxBytes"));
-   Require(f.minBytes<=f.maxBytes&&f.maxBytes>0&&f.maxBytes<=4096,"Invalid text byte limits");
-   if(raw.contains("validation")){auto validation=Text(raw.at("validation"),16);Require(validation=="none"||validation=="identifier","Unsupported text validation");f.identifier=validation=="identifier";}
-   Require(value.is_string(),"Text default must be a string");f.value=value.get<std::string>();Require(ValidSettingValue(f),"Invalid text default");
-  }else if(type=="slider" && schemaVersion>=2){
+  }else if(type=="slider" && schemaVersion==2){
    f.type=SettingType::Slider;auto kind=Text(raw.at("numberType"),16);Require(kind=="integer" || kind=="decimal","Invalid slider number type");f.slider.decimal=kind=="decimal";
    if(f.slider.decimal){f.slider.precision=unsigned(Integer(raw.at("precision")));Require(f.slider.precision>=1 && f.slider.precision<=6,"Invalid slider precision");}
    else Require(!raw.contains("precision"),"Integer slider must omit precision");
@@ -129,10 +122,6 @@ SettingsDefinition ParseSettingsDescription(std::string const& bytes,std::string
    f.type=SettingType::Choice;auto const& options=raw.at("options");Require(options.is_array() && options.size()>=2 && options.size()<=6,"Invalid description choice options");
    std::set<std::string> captions;for(auto const& option:options){auto text=Caption(option,160);Require(captions.insert(text.en).second,"Duplicate description choice caption");f.options.push_back(text.en);f.optionText.push_back(std::move(text));}
    f.maximum=int(f.options.size())-1;f.value=Integer(value);
-  }else if(type=="binding" && schemaVersion>=4){
-   f.type=SettingType::Binding;f.bindingModifiers=schemaVersion>=5?modmenu::binding::AllModifiers:3;auto name=Text(value,modmenu::binding::MaxBytes);
-   if(raw.contains("legacyNumericStrings")){Require(raw["legacyNumericStrings"].is_boolean(),"Invalid binding legacy encoding");f.legacyNumericStrings=raw["legacyNumericStrings"].get<bool>();}
-    auto binding=modmenu::binding::Parse(name);Require(binding.has_value()&&!(binding->modifiers&~f.bindingModifiers)&&modmenu::binding::Token(*binding)==name,"Invalid binding default");f.value=name;if(f.legacyNumericStrings)Require(SetBinding(f,*binding),"Invalid legacy binding default");
   }else if(type=="key"){
    f.type=SettingType::Key;auto const& list=raw.at("keys");Require(list.is_array() && !list.empty() && list.size()<=96,"Invalid description keys");
    std::set<std::string> tokens;for(auto const& k:list){auto name=Text(k,16);Require(Key(name) && tokens.insert(name).second,"Invalid description key token");f.options.push_back(name);}
@@ -142,8 +131,6 @@ SettingsDefinition ParseSettingsDescription(std::string const& bytes,std::string
   for(auto name:{"numberType","precision"})Require(!raw.contains(name) || f.type==SettingType::Slider,"Description property does not match type");
   Require(!raw.contains("options") || f.type==SettingType::Choice,"Description property does not match type");
   Require(!raw.contains("keys") || f.type==SettingType::Key,"Description property does not match type");
-  Require(!raw.contains("legacyNumericStrings") || f.type==SettingType::Binding,"Binding encoding requires a binding field");
-  for(auto name:{"minBytes","maxBytes","validation"})Require(!raw.contains(name)||f.type==SettingType::Text,"Description property does not match text");
   if(auto n=std::get_if<int>(&f.value))Require(*n>=f.minimum && *n<=f.maximum,"Description default outside range");
   f.defaultValue=f.value;result.fields.push_back(std::move(f));++fieldIndex;
  }

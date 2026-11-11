@@ -55,7 +55,7 @@ void ExternalSettingsChecks(void(*check)(bool,char const*)){
  }
  auto refuse=[&](Json const& candidate,char const* name){Write(sidecar,candidate.dump());auto before=Read(config);check(!InspectSettings(root,"ExamplePlugin").available && !LoadSettings(root,"ExamplePlugin").valid && Read(config)==before,name);};
  for(auto field:{"schemaVersion","plugin","config","fields"}){auto s=spec;s.erase(field);refuse(s,"required description sections cannot be omitted");}
- {auto s=spec;s["schemaVersion"]=6;refuse(s,"future description version refuses");}
+ {auto s=spec;s["schemaVersion"]=3;refuse(s,"unsupported description version refuses");}
  {auto s=spec;s["plugin"]["id"]="Other";refuse(s,"description cannot claim another folder ID");}
  {auto s=spec;s["plugin"]["entry"]="ExamplePlugin.dll";refuse(s,"description entry must match exact manifest entry");}
  {auto s=spec;s["plugin"]["versions"]={"1.1.0"};refuse(s,"exact version mismatch refuses");}
