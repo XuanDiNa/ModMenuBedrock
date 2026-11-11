@@ -5,10 +5,11 @@
 #include <vector>
 #include <string_view>
 #include <cstdint>
+#include "../../integration/sdk/ModMenuBinding.h"
 namespace menu {
-enum class SettingType {Boolean,Integer,Choice,Key,Text,Slider};
+enum class SettingType {Boolean,Integer,Choice,Key,Text,Slider,Binding};
 // Internal legacy adapters only. The public passive v1 contract is unchanged.
-enum class TextFormat {None,Delay,SlotMap,KeyList};
+enum class TextFormat {None,Delay,SlotMap,KeyList,Public};
 enum class KeyFormat {Menu,AutoClick,AutoJumpReset};
 struct SliderValue {std::int64_t ticks{};bool operator==(SliderValue const&) const=default;};
 struct SliderSpec {bool decimal{};unsigned precision{};std::int64_t minimum{},maximum{},step{};};
@@ -24,6 +25,8 @@ struct SettingField {
     std::vector<SettingTranslation> optionText;
     TextFormat textFormat{};KeyFormat keyFormat{};
     SliderSpec slider;
+    std::size_t minBytes{},maxBytes{4096};bool identifier{};
+    bool legacyNumericStrings{};unsigned bindingModifiers{3};
 };
 // Internal source-backed description contract, not an external DLL ABI.
 struct SettingsDefinition {
@@ -59,4 +62,5 @@ SettingsDraft LoadSettings(std::filesystem::path const& mods,std::string const& 
 SettingsDraft ApplySettings(std::filesystem::path const& mods,SettingsDraft const& draft);
 std::string SettingText(SettingField const&);
 bool SetKey(SettingField&,unsigned key);
+bool SetBinding(SettingField&,modmenu::binding::Binding);
 }

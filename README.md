@@ -10,9 +10,9 @@ No LeviLamina API, resource pack or server component is required.
 
 **Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03**
 
-**0.5.0-test1 — Prerelease · MIT License**
+**0.6.0-test5-leftalt — Prerelease · MIT License**
 
-[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.5.0-test1) ·
+[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) ·
 [Report an issue](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### Features
@@ -24,6 +24,9 @@ No LeviLamina API, resource pack or server component is required.
 - Optional sliders for signed integers and fixed-precision decimals, with dragging,
   direct input and keyboard adjustment.
 - English, Traditional Chinese and Simplified Chinese, following the game language.
+- Ctrl / Shift / Left Alt combinations for compatible plugins; Esc clears a binding.
+- Optional UTF-8 text fields and asynchronous plugin workspaces.
+- Navigation and committed drafts survive temporary focus loss; transient input is cancelled.
 - Exact-version safety checks and compatibility handling for supported shared hooks.
 
 ### Installation
@@ -34,10 +37,10 @@ No LeviLamina API, resource pack or server component is required.
    launcher enabled/disabled state.
 3. Start through LeviLauncher. Click Mods in the main or pause menu, or press F10.
 
-One DLL supports the three exact builds above. Do not install the integration
-examples as plugins or overwrite other plugins' files.
-Keep only the manifest name matching the launcher state (`manifest.json` or
-`manifest.json.close`), not both.
+One DLL supports the three exact builds above. This release contains **ModMenu
+only**. Keep one active copy of the DLL and preserve the launcher-managed
+manifest name (`manifest.json` or `manifest.json.close`). No default configuration
+or other plugin update is included.
 
 ### Configuration
 
@@ -45,6 +48,12 @@ Configure edits remain drafts until Apply; Cancel discards them. While binding a
 key, Escape clears the binding when the field allows it. Outside key capture,
 Escape goes back one page; leaving Mods opened from pause keeps the game paused.
 F10 does not open Mods from the HUD, inventory or vanilla settings.
+
+For a combination, click the binding field, hold Ctrl/Shift/Left Alt, then press
+the main key. Standalone modifiers are captured on release. Esc selects Unbound;
+Apply saves it. Mouse buttons cannot be bound, and Windows-reserved shortcuts
+may be consumed by the operating system. See [key bindings](integration/KEYBINDINGS.md)
+and [workspaces](integration/WORKSPACES.md) for the public SDK.
 
 Built-in adapters cover MouseTweaksBedrock, AutoRestock, ContainerPreview,
 FakeSneak, AutoClick and AutoJumpReset. Other authors can add a passive
@@ -55,15 +64,20 @@ their saved settings.
 
 ### Compatibility and feedback
 
-Basic in-game use of this exact DLL has been tested by the maintainer on all
-three supported versions. Long sessions, every GUI scale, OreUI and arbitrary
-resource-pack menu replacements have not been exhaustively verified. Unknown
-game images or incompatible shared-hook owners leave ModMenu inactive; update
-an old Mouse Tweaks build rather than bypassing those checks.
+The maintainer confirmed the latest ModMenu compatibility package works on
+1.26.45.01 and 1.26.51.01. All three exact builds also passed the offline native
+checks. This is basic manual acceptance, not exhaustive testing of long sessions,
+every GUI scale, OreUI or arbitrary resource-pack menus. Unknown game images or
+incompatible shared-hook owners leave ModMenu inactive.
+
+Plugins remain responsible for interpreting saved bindings and hot reloading
+their settings. A Workspace provider that pins a specific ModMenu DLL hash needs
+its own matching update; this release changes ModMenu only.
+See [release notes](docs/releases/0.6.0-test5-leftalt.md).
 
 For issues, include the exact game/plugin versions, operation and relevant log
 excerpt, with personal information removed. See [testing](TESTING.md) and
-[release verification](docs/verification.md) for scope and artifact provenance.
+[release verification](docs/releases/0.6.0-test5-leftalt-verification.json) for scope and artifact provenance.
 
 Source is available under [MIT](LICENSE); dependency notices are in
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt).
@@ -79,9 +93,9 @@ Minecraft 基岩版／LeviLauncher 原生插件選單。
 
 **Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03**
 
-**0.5.0-test1 — 預發佈版 · MIT 授權**
+**0.6.0-test5-leftalt — 預發佈版 · MIT 授權**
 
-[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.5.0-test1) ·
+[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) ·
 [回報問題](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### 功能
@@ -92,6 +106,9 @@ Minecraft 基岩版／LeviLauncher 原生插件選單。
 - 共用設定控制項、分類、說明、單項重設及 Apply／Cancel。
 - 選用滑動條支援正負整數與固定精度小數，可拖曳、直接輸入及鍵盤微調。
 - 跟隨遊戲語言，提供英文、繁體中文與簡體中文。
+- 相容插件支援 Ctrl／Shift／左 Alt 組合鍵，綁定時按 Esc 解除綁定。
+- 選用 UTF-8 文字欄位與非同步插件工作頁。
+- 暫時失焦時保留導覽及已提交草稿值，取消尚未完成的輸入操作。
 - 精確遊戲版本檢查，以及受支援的共用 Hook 相容處理。
 
 ### 安裝
@@ -101,14 +118,19 @@ Minecraft 基岩版／LeviLauncher 原生插件選單。
    目錄。保留原有 `config.json`、日誌及啟動器啟用／停用狀態。
 3. 透過 LeviLauncher 啟動，點擊主選單／暫停選單的 Mods，或按 F10。
 
-上述三個精確版本共用一份 DLL。不要把接入範例當成插件安裝，也不要覆蓋其他插件檔案。
-依啟用狀態只保留 `manifest.json` 或 `manifest.json.close`，不要同時保留兩者。
+上述三個精確版本共用一份 DLL，本次**只發佈 ModMenu**。只保留一份載入中的 DLL，
+並維持啟動器管理的 `manifest.json` 或 `manifest.json.close` 檔名。
+套件不含預設設定檔，也不包含其他插件更新。
 
 ### 設定
 
 Configure 在 Apply 前只修改草稿，Cancel 不儲存。等待綁鍵時，若該欄位允許，
 Escape 會解除綁定；其他情況下 Escape 逐層返回。從暫停選單開啟 Mods 後退出，
 仍停留在暫停選單。F10 不會在 HUD、背包或原版設定頁開啟 Mods。
+
+點擊綁鍵欄位，先按住 Ctrl／Shift／左 Alt，再按主鍵；單獨綁修飾鍵時放開確認。
+Esc 設為無綁定，Apply 才儲存。滑鼠鍵不可綁，Windows 保留組合可能被系統攔截。
+公用 SDK 見[快捷鍵](integration/KEYBINDINGS.md)及[工作頁](integration/WORKSPACES.md)。
 
 內建適配器提供 MouseTweaksBedrock、AutoRestock、ContainerPreview、FakeSneak、
 AutoClick 及 AutoJumpReset 的設定頁。其他作者可隨附被動的
@@ -118,12 +140,16 @@ AutoClick 及 AutoJumpReset 的設定頁。其他作者可隨附被動的
 
 ### 相容性與回饋
 
-維護者已在三個支援版本人工測試此份 DLL，基本使用正常。長時間使用、所有 GUI
-比例、OreUI 及任意資源包改版選單仍未全面驗證。未知遊戲映像或不相容的共用 Hook
-會讓 ModMenu 保持未啟用；若使用舊版 Mouse Tweaks，請更新它，不要繞過檢查。
+維護者已確認最新相容套件在 1.26.45.01、1.26.51.01 使用正常；三個精確版本
+也都通過離線原生檢查。這是基本人工驗收，並非長時間使用、所有 GUI 比例、OreUI
+或任意資源包選單的完整驗證。未知映像或不相容的共用 Hook 會讓 ModMenu 保持未啟用。
+
+設定的解析、觸發及熱更新仍由各插件負責。若 Workspace 提供者限定特定 ModMenu
+DLL 雜湊，需要另外取得相容版本；這次只更新 ModMenu。
+詳見[發佈說明](docs/releases/0.6.0-test5-leftalt.md)。
 
 回報問題時，請提供精確遊戲／插件版本、操作與相關日誌片段，並移除個人資訊。
-測試範圍及檔案來源見[測試說明](TESTING.md)與[發佈驗證](docs/verification.md)。
+測試範圍及檔案來源見[測試說明](TESTING.md)與[發佈驗證](docs/releases/0.6.0-test5-leftalt-verification.json)。
 
 原始碼採用 [MIT 授權](LICENSE)，依賴聲明見
 [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt)；編譯方式見

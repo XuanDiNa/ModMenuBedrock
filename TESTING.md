@@ -2,53 +2,54 @@
 
 ## English
 
-On 2026-10-29 the maintainer reported normal basic use of **this exact
-0.5.0-test1 DLL** on Minecraft 1.26.45.01, 1.26.51.01 and 1.26.52.03.
-This is a general three-version result, not a recorded per-step performance
-benchmark or exhaustive acceptance of every environment.
+On 2026-11-11 the maintainer reported the latest ModMenu compatibility package
+working on **1.26.45.01 and 1.26.51.01**. Its DLL SHA-256 is
+`FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`.
+This is basic manual acceptance, not a recorded per-step benchmark or exhaustive
+acceptance of every environment. The exact 1.26.52.03 native profile remains
+supported and was included in the offline checks.
 
-For regression checks:
+Debug and Release each passed 22 suites, including 94 exact original/launcher
+image checks, 431 binding checks, pointer/focus/Workspace and real C ABI tests.
+Schema/parser agreement covered 3,525 cases. Private vanilla-menu fixtures were
+unavailable and skipped; synthetic definitions were tested. No test launched Minecraft.
 
-1. Close Minecraft before installation. Back up only ModMenu and preserve its
-   configuration, logs and launcher enabled/disabled state.
-2. Check main/pause Mods buttons and F10 (or your custom shortcut), including a
-   cold restart. Escape from Mods should return to the original pause menu.
-3. Verify loaded-only discovery, search and the current game-language labels.
-4. In Configure, check Cancel discards drafts and Apply persists values. For key
-   fields that allow no binding, Escape during capture should clear the key.
-5. For an explicitly integrated slider, check slow/fast drag, release outside,
-   Escape during drag, direct input, keyboard steps and Apply/Cancel. The optional
-   [AutoRestock descriptor](integration/v2-examples/AutoRestock/modmenu.settings.json)
-   matches manifest `0.3.1-test4` only; back up its descriptor and leave its DLL
-   and config unchanged. Do not fake a manifest version to force acceptance.
-6. Close Mods and check the installed compatible companion plugins still work.
-   A successful JSON save does not prove a companion hot-reloaded it.
+For focused regression checks:
 
-Long sessions, all GUI scales, all companion combinations, fullscreen modes,
-OreUI and arbitrary custom menu resource packs are not exhaustively verified.
-No server-protocol or multiplayer-wide behavior is claimed by this UI test.
-Do not bypass an INACTIVE safety refusal; report the version and log reason.
+1. Check Mods / F10 on the main and pause menus, including a normal cold restart.
+2. Check pointer clicks, scrolling, Apply/Cancel and Escape navigation.
+3. In ModMenu's own shortcut field, try Ctrl+K, Shift+K and Left Alt+K. Apply,
+   reopen, check persistence and test the selected shortcut from the main/pause
+   menu. Restore your preferred shortcut afterward.
+4. Switch briefly to another app and return. Confirm the permitted page remains
+   and a held key or stale click does not activate anything.
 
-Automated commands and the distinction between synthetic/private-image tests
-are in [BUILDING.md](BUILDING.md). No automated test is a replacement for playtesting.
+Plugins interpret and hot reload their own settings; their chord actions are
+outside this ModMenu-only acceptance. Long sessions, every GUI scale, OreUI,
+all providers and arbitrary custom menus are not exhaustively verified.
+Do not bypass INACTIVE refusals; report the version and log reason.
+See [build checks](BUILDING.md) and [installation](docs/releases/package-installation.md).
 
 ## 繁體中文
 
-2026-10-29 維護者回報：**此份 0.5.0-test1 DLL** 在 1.26.45.01、1.26.51.01、
-1.26.52.03 三個版本基本使用正常。這是整體回報，不自行推定每一步都分別記錄過，
-也不是效能數據或全部環境的完整驗收。
+2026-11-11 維護者回報最新 ModMenu 相容套件在 **1.26.45.01、1.26.51.01** 使用正常。
+DLL SHA-256 為 `FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`。
+這是基本人工驗收，不自行推定每一步均有個別紀錄，也不是效能數據或全部環境的完整驗證。
+1.26.52.03 的精確原生配置保留支援，亦已納入本輪離線檢查。
 
-回歸測試可依序確認：
+Debug／Release 每模式各通過 22 組測試，包括 94 項原始／啟動器映像、431 項綁鍵、
+滑鼠、焦點、Workspace 與實際跨 DLL C ABI；Schema／解析器對照有 3,525 個案例。
+私有原版選單資料無法取得，已略過，合成選單測試正常執行；自動測試沒有啟動遊戲。
 
-1. 關閉遊戲後安裝，備份 ModMenu，保留設定、日誌與啟用／停用狀態。
-2. 主選單／暫停選單 Mods、F10 或自訂鍵，並完全退出後重啟一次；Escape 返回原本暫停選單。
-3. 只列已載入插件、搜尋及跟隨遊戲語言的文字。
-4. Configure 的 Cancel 不儲存、Apply 保存；允許無綁定的欄位在等待綁鍵時按 Escape 清空。
-5. 已明確接入的滑動條測慢拖／快拖、滑出放開、拖動中 Escape、數字輸入、鍵盤與
-   Apply／Cancel。選用 AutoRestock 描述檔僅符合 manifest `0.3.1-test4`，先備份描述檔，
-   不換 DLL 或 config，也不要偽造版本。
-6. 關閉 Mods 後檢查原有相容插件；JSON 儲存成功不代表插件確實熱載入。
+安裝後可做精簡回歸：
 
-長時間使用、所有 GUI 比例／插件組合／全螢幕模式、OreUI 及任意改版選單仍未全面驗證。
-此介面測試不宣稱伺服器協定或所有多人環境均通過。遇到 INACTIVE 應回報日誌原因，
-不要取消保護強行啟用。離線驗證方式見 [BUILDING.md](BUILDING.md)，不能代替人工遊玩。
+1. 主／暫停選單 Mods、F10，並正常退出後冷啟動一次。
+2. 滑鼠、捲動、Apply／Cancel 及 Escape 返回。
+3. ModMenu 自己的快捷鍵依次試 Ctrl+K、Shift+K、左 Alt+K，Apply 後重開確認保存，
+   在主／暫停選單測試選定組合鍵，之後恢復偏好的快捷鍵。
+4. 暫切其他程式再回來，確認允許的頁面保留，按住的鍵及舊點擊不會造成誤觸。
+
+各插件自行解析及熱更新設定，其組合鍵功能不屬本輪 ModMenu 驗收。
+長時間使用、所有 GUI 比例、OreUI、全部提供者及任意改版選單尚未全面驗證。
+遇到 INACTIVE 應回報版本及日誌原因，不要取消保護。
+詳見[建置檢查](BUILDING.md)及[安裝](docs/releases/package-installation.md)。

@@ -89,7 +89,8 @@ std::vector<SettingField> Fields(SettingsDefinition const& a,Json const& j,Numbe
   if(j.contains(p)){
    auto const& v=j[p];
    if(f.type==SettingType::Boolean){if(!v.is_boolean())throw std::runtime_error("Expected boolean: "+f.label);f.value=v.get<bool>();}
-   else if(f.type==SettingType::Key || f.type==SettingType::Text){
+   else if(f.type==SettingType::Key || f.type==SettingType::Text || f.type==SettingType::Binding){
+     if(f.type==SettingType::Binding&&v.is_number_integer()&&v>=0&&v<=254){if(!SetBinding(f,{v.get<unsigned>(),0})||!Valid(f))throw std::runtime_error("Invalid legacy key");continue;}
     if(!f.external && ((f.type==SettingType::Key && f.keyFormat==KeyFormat::AutoJumpReset) || f.textFormat==TextFormat::Delay) && v.is_number_integer() && v>=0 && v<=(f.type==SettingType::Key?255:5000)){
      if(f.type==SettingType::Key){char token[16]{};std::snprintf(token,sizeof(token),"0x%02X",v.get<unsigned>());f.value=std::string(token);}else f.value=std::to_string(v.get<unsigned>());
     }else{
@@ -193,6 +194,7 @@ std::string SettingText(SettingField const& field){
  }return std::get<std::string>(field.value);
 }
 bool SetKey(SettingField& field,unsigned key){
+ if(field.type==SettingType::Binding)return SetBinding(field,{key==27?0u:key,0});
  if(field.type!=SettingType::Key)return false;std::string name;
  if(!field.external && field.keyFormat!=KeyFormat::Menu){
   if(key==27)key=0;

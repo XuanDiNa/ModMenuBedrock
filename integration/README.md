@@ -1,5 +1,16 @@
 # Plugin integration / 插件接入
 
+**0.6.0-test5-leftalt:** optional [keyboard bindings v5 / 公用鍵盤綁定](KEYBINDINGS.md)
+adds broad keyboard coverage and exact Ctrl/Shift/Left Alt combinations. Existing v1/v2/v3/v4
+contracts and the Workspace ABI remain unchanged.
+
+**0.6.0-test3:** optional public text settings v3 and generic asynchronous
+[Workspaces / 公用工作頁](WORKSPACES.md). The v1/v2 contracts below are unchanged.
+Temporary focus loss suspends input without closing valid navigation; scene and
+provider-session invalidation remain enforced. No provider API update is required.
+
+暫時失焦只暫停輸入並保留有效頁面；場景及提供者工作階段失效保護不變，無須更新 API。
+
 **0.5.0-test1 adds optional v2 sliders.** Existing v1 behavior is unchanged.
 See [Sliders / 滑動條](SLIDERS.md) and the separate v2 schema/examples.
 **0.5.0-test1 新增選用的 v2 滑動條。** 以下 v1 規格保持不變；新控件見上方連結。

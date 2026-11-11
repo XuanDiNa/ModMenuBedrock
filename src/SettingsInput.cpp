@@ -1,5 +1,6 @@
 #include "ModMenu/Settings.h"
 #include "ModMenu/Slider.h"
+#include "ModMenu/TextEditor.h"
 #include <algorithm>
 #include <charconv>
 #include <array>
@@ -54,6 +55,7 @@ std::string MapToken(std::string_view token){
  if(s.starts_with("NUMPAD"))s="NUM"+s.substr(6);return s;
 }
 std::optional<std::string> NormalizeText(SettingField const& f,std::string_view text){
+ if(f.type==SettingType::Text&&f.external&&f.textFormat==TextFormat::Public){if(PlainText(text,f.minBytes,f.maxBytes,f.identifier))return std::string(text);return {};}
  if(f.type!=SettingType::Text || f.external || f.textFormat==TextFormat::None || text.size()>SettingInputLimit(f))return {};
  for(unsigned char c:text)if(c<32 || c>=127)return {};
  text=Trim(text);
@@ -91,11 +93,13 @@ std::optional<std::string> NormalizeText(SettingField const& f,std::string_view 
 }
 }
 std::size_t SettingInputLimit(SettingField const& f){
+ if(f.type==SettingType::Text&&f.external&&f.textFormat==TextFormat::Public)return f.maxBytes;
  if(f.type==SettingType::Slider)return 32;
  if(f.type!=SettingType::Text)return 11;
  switch(f.textFormat){case TextFormat::Delay:return 32;case TextFormat::SlotMap:return 255;case TextFormat::KeyList:return 127;default:return 0;}
 }
 std::string SettingInputError(SettingField const& f){
+ if(f.type==SettingType::Text&&f.external)return "Text does not match the declared format or UTF-8 byte limits.";
  if(f.type==SettingType::Slider)return "Enter a value on the declared slider step within its range.";
  switch(f.textFormat){
  case TextFormat::Delay:return "Enter 0-5000 ms or a range such as 120-150. Avoid leading zeros.";
@@ -105,6 +109,11 @@ std::string SettingInputError(SettingField const& f){
  }
 }
 bool ValidSettingValue(SettingField const& f){
+ if(f.type==SettingType::Binding){
+  auto s=std::get_if<std::string>(&f.value);if(!s)return false;
+  if(f.legacyNumericStrings&&!s->empty()&&(*s)[0]>='0'&&(*s)[0]<='9'){auto n=Number(*s,255,true);return n&&(!*n||modmenu::binding::Allowed(*n));}
+  auto binding=modmenu::binding::ParseInput(*s);return binding&&!(binding->modifiers&~f.bindingModifiers);
+ }
  if(f.type==SettingType::Slider)return ValidSlider(f);
  if(f.type==SettingType::Boolean)return std::holds_alternative<bool>(f.value);
  if(f.type==SettingType::Key){
@@ -119,6 +128,7 @@ bool ValidSettingValue(SettingField const& f){
 bool SetText(SettingField& f,std::string_view text){auto normalized=NormalizeText(f,text);if(!normalized)return false;f.value=*normalized;return true;}
 std::string SettingKeyCaption(SettingField const& f){
  auto s=std::get_if<std::string>(&f.value);if(!s)return {};
+ if(f.type==SettingType::Binding){auto b=modmenu::binding::ParseInput(*s);if(f.legacyNumericStrings&&!s->empty()&&s->front()>='0'&&s->front()<='9'){auto n=Number(*s,255,true);if(n)b=modmenu::binding::Binding{*n,0};}if(b)return b->key?modmenu::binding::Token(*b):"Unbound";return *s;}
  if(f.external || f.keyFormat==KeyFormat::Menu)return *s=="NONE"?"Unbound":*s;
  auto code=NativeKey(f,*s);if(!code)return *s;
  if(!*code)return "Unbound";
@@ -131,5 +141,9 @@ std::string SettingKeyCaption(SettingField const& f){
      {"LSHIFT",160u},{"RSHIFT",161u},{"LCTRL",162u},{"RCTRL",163u},{"LALT",164u},{"RALT",165u},
      {";",0xBAu},{",",0xBCu},{".",0xBEu},{"/",0xBFu},{"`",0xC0u},{"\\",0xDCu},{"'",0xDEu}})if(*code==vk)return name;
  return *s;
+}
+bool SetBinding(SettingField& f,modmenu::binding::Binding b){
+ if(f.type!=SettingType::Binding||!modmenu::binding::Valid(b)||(b.modifiers&~f.bindingModifiers))return false;
+ f.value=f.legacyNumericStrings&&!b.modifiers&&b.key>=48&&b.key<=57?modmenu::binding::HexToken(b.key):modmenu::binding::Token(b);return true;
 }
 }

@@ -1,4 +1,4 @@
-ModMenuBedrock 0.5.0-test1
+ModMenuBedrock 0.6.0-test5-leftalt
 
 Original ModMenuBedrock source: Copyright (c) 2026 XuanDiNa, MIT License.
 See LICENSE. Third-party material retains its own copyright and license.

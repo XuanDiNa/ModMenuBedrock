@@ -114,7 +114,8 @@ void UiTests(){
    if(mode==0)changed.width=640;if(mode==1)changed.foreground=false;if(mode==2)changed.eligible=false;if(mode==3)changed.scene=MenuScene::Main;
    m.Tick(changed);
    if(mode==0){Check(m.configuring && SettingText(m.draft.fields[0])=="1" && !m.settingsChanged,"resize cancels draft drag and restores change state");m.Input({Kind::Up,20,20,1},changed);Check(!m.Captured(),"resize leaves no stuck release");}
-   else Check(!m.configuring && !m.Captured(),"focus scene or eligibility loss clears active drag");
+   else if(mode==1)Check(m.configuring && !m.Captured() && SettingText(m.draft.fields[0])=="1" && !m.settingsChanged && m.settingsRequest==Menu::Request::None,"focus loss retains page but rolls back unfinished drag without saving");
+   else Check(!m.configuring && !m.Captured(),"scene or eligibility loss clears active drag and page");
   }
  });
  Run("input isolation",[]{auto m=Page();auto rail=ArrangeSettings(m,frame).rows[0].rail;Mouse(m,Kind::Down,rail.x,rail.y+2);
