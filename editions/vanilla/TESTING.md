@@ -1,55 +1,45 @@
-# Testing / 測試
+# Paired 26.51 native compatibility test / 配套測試
 
-## English
+MouseTweaksBedrock 0.3.3-test1-vanilla51
+ModMenuBedrock 0.6.0-test10-mouse51
 
-On 2026-11-11 the maintainer reported the latest ModMenu compatibility package
-working on **1.26.45.01 and 1.26.51.01**. Its DLL SHA-256 is
-`FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`.
-This is basic manual acceptance, not a recorded per-step benchmark or exhaustive
-acceptance of every environment. The exact 1.26.52.03 native profile remains
-supported and was included in the offline checks.
+Offline verification passed. Manual gameplay acceptance is pending.
+MouseTweaks DLL SHA-256: 77425954246FCD765070911FAF6135C7E60A4A5E4946FC84C5A1FDC88C461431
+ModMenu DLL SHA-256: 2039530A342CA2E44D8F7A3AC7DB85BB66546E2BBB720EF9CE14392B13005482
 
-Debug and Release each passed 22 suites, including 94 exact original/launcher
-image checks, 431 binding checks, pointer/focus/Workspace and real C ABI tests.
-Schema/parser agreement covered 3,525 cases. Private vanilla-menu fixtures were
-unavailable and skipped; synthetic definitions were tested. No test launched Minecraft.
+## Install / 安裝
 
-For focused regression checks:
+Close Minecraft normally and back up both existing plugin folders. Extract both
+update ZIPs to the selected instance's mods folder. Keep existing JSON settings
+and logs; neither update archive contains a default configuration or game files.
+Use one loaded copy of each DLL. No LeviLamina reinstallation is required.
 
-1. Check Mods / F10 on the main and pause menus, including a normal cold restart.
-2. Check pointer clicks, scrolling, Apply/Cancel and Escape navigation.
-3. In ModMenu's own shortcut field, try Ctrl+K, Shift+K and Left Alt+K. Apply,
-   reopen, check persistence and test the selected shortcut from the main/pause
-   menu. Restore your preferred shortcut afterward.
-4. Switch briefly to another app and return. Confirm the permitted page remains
-   and a held key or stale click does not activate anything.
+If MouseTweaks was disabled as manifest.json.close, keep only one active
+manifest.json after updating. Do not leave duplicate loadable manifests or
+change either game EXE.
 
-Plugins interpret and hot reload their own settings; their chord actions are
-outside this ModMenu-only acceptance. Long sessions, every GUI scale, OreUI,
-all providers and arbitrary custom menus are not exhaustively verified.
-Do not bypass INACTIVE refusals; report the version and log reason.
-See [build checks](BUILDING.md) and [installation](docs/releases/package-installation.md).
+正常退出遊戲並備份兩個插件資料夾，把兩個更新包解壓至同一遊戲實例的 mods。
+保留自己的 JSON 設定與日誌。若 MouseTweaks 是 manifest.json.close，先恢復一份
+啟用的 manifest.json，再套用更新；避免重複描述檔及 DLL。無須重裝 LeviLamina。
 
-## 繁體中文
+## Focused test / 人工測試
 
-2026-11-11 維護者回報最新 ModMenu 相容套件在 **1.26.45.01、1.26.51.01** 使用正常。
-DLL SHA-256 為 `FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`。
-這是基本人工驗收，不自行推定每一步均有個別紀錄，也不是效能數據或全部環境的完整驗證。
-1.26.52.03 的精確原生配置保留支援，亦已納入本輪離線檢查。
+1. Start 26.51 without LeviLamina. Confirm MouseTweaks NATIVE READY and ModMenu
+   native input Ready in this launch's logs.
+2. Check main-menu and pause-menu Mods buttons, configured shortcut and Escape.
+3. In a container, Shift-left drag across mixed item types. Check left collection,
+   right placement and wheel transfer. Check normal input after closing the UI.
+4. Exit normally and repeat a second launch. Include console disabled if you use
+   that launcher option. If a problem occurs, retain both logs from that run.
+5. MouseTweaks supports exactly 26.45 / 26.51 / 26.52; regression-test the other
+   two versions as needed for this newly built DLL. ModMenu also supports 26.60,
+   but this update does not add 26.60 support to MouseTweaks.
 
-Debug／Release 每模式各通過 22 組測試，包括 94 項原始／啟動器映像、431 項綁鍵、
-滑鼠、焦點、Workspace 與實際跨 DLL C ABI；Schema／解析器對照有 3,525 個案例。
-私有原版選單資料無法取得，已略過，合成選單測試正常執行；自動測試沒有啟動遊戲。
+先確認兩個插件 Ready，再檢查主／暫停選單、快捷鍵、Shift＋左鍵混合搬運、
+左鍵收集、右鍵放置、滾輪及關閉介面後的正常輸入。完全退出後第二次啟動，
+有使用主控台選項時包含一次關閉主控台。出錯請保留這次兩份新日誌。
+本次 DLL 尚待遊戲內驗收；先前版本的人工結果不能替代此次測試。
 
-安裝後可做精簡回歸：
-
-1. 主／暫停選單 Mods、F10，並正常退出後冷啟動一次。
-2. 滑鼠、捲動、Apply／Cancel 及 Escape 返回。
-3. ModMenu 自己的快捷鍵依次試 Ctrl+K、Shift+K、左 Alt+K，Apply 後重開確認保存，
-   在主／暫停選單測試選定組合鍵，之後恢復偏好的快捷鍵。
-4. 暫切其他程式再回來，確認允許的頁面保留，按住的鍵及舊點擊不會造成誤觸。
-
-各插件自行解析及熱更新設定，其組合鍵功能不屬本輪 ModMenu 驗收。
-長時間使用、所有 GUI 比例、OreUI、全部提供者及任意改版選單尚未全面驗證。
-遇到 INACTIVE 應回報版本及日誌原因，不要取消保護。
-詳見[建置檢查](BUILDING.md)及[安裝](docs/releases/package-installation.md)。
+The inspected 26.51 session reached Ready in both plugins and recorded a Mods
+open event with zero ModMenu faults. This is startup/menu evidence, not completion
+of the full container gesture and second-launch acceptance steps above.

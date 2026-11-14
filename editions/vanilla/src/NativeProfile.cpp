@@ -16,13 +16,20 @@ struct ExactImage {ImageIdentity identity;std::size_t bytes;char const* sha256;c
 struct BuildDescriptor {
  GameBuild build;char const* version;ExactImage images[2];std::size_t textBytes;char const* textSha256;
  std::span<NativeAddress const> addresses;std::span<EntryGuard const> guards;NativeLayout layout;
+ std::span<ExactImage const> additionalImages{};
 };
 constexpr NativeLayout layout52{};
 constexpr NativeLayout layout45{1480,416,960,376,384,1736,1544,72,56,1112,1117,820,824};
+constexpr NativeLayout layout60{1512,456,968,416,424,1728,1536,80,64,1152,1157,828,832,144,160,112,117};
 #include "NativeCompatibility.inl"
 BuildDescriptor const* Descriptor(GameBuild build){for(auto const& d:builds)if(d.build==build)return &d;return nullptr;}
 bool SameIdentity(ImageIdentity const& a,ImageIdentity const& b){return a.machine==b.machine && a.timestamp==b.timestamp && a.imageSize==b.imageSize && a.checksum==b.checksum;}
-BuildDescriptor const* Descriptor(ImageIdentity const& id){for(auto const& d:builds)for(auto const& image:d.images)if(SameIdentity(id,image.identity))return &d;return nullptr;}
+BuildDescriptor const* Descriptor(ImageIdentity const& id){
+ for(auto const& d:builds){
+  for(auto const& image:d.images)if(SameIdentity(id,image.identity))return &d;
+  for(auto const& image:d.additionalImages)if(SameIdentity(id,image.identity))return &d;
+ }return nullptr;
+}
 bool Hash(std::span<std::byte const> data,char const* expected){
     BCRYPT_ALG_HANDLE algorithm{};BCRYPT_HASH_HANDLE handle{};
     if(BCryptOpenAlgorithmProvider(&algorithm,BCRYPT_SHA256_ALGORITHM,nullptr,0)<0)return false;
@@ -70,6 +77,7 @@ bool VerifyFile(std::span<std::byte const> data) noexcept{
         ImageIdentity id{nt->FileHeader.Machine,nt->FileHeader.TimeDateStamp,nt->OptionalHeader.SizeOfImage,nt->OptionalHeader.CheckSum};
         auto d=Descriptor(id);if(!d)return false;ExactImage const* exact=nullptr;
         for(auto const& image:d->images)if(SameIdentity(id,image.identity))exact=&image;
+        for(auto const& image:d->additionalImages)if(SameIdentity(id,image.identity))exact=&image;
         if(!exact || data.size()!=exact->bytes)return false;
         auto section=IMAGE_FIRST_SECTION(nt);bool found=false;
         for(unsigned i=0;i<nt->FileHeader.NumberOfSections;++i){
@@ -83,8 +91,8 @@ bool VerifyFile(std::span<std::byte const> data) noexcept{
                 if(guard.rva<0x1000 || guard.rva-0x1000>s.SizeOfRawData-32 || !MatchEntry(data.subspan(s.PointerToRawData+guard.rva-0x1000,32),std::as_bytes(std::span(guard.bytes))))return false;
             }
         }
-        // A second complete hash is admitted only for the reviewed 51 launcher
-        // console form. Never normalize headers or accept arbitrary PE edits.
+        // Alternate complete hashes admit only explicitly reviewed GUI/console
+        // forms. Never normalize headers or accept arbitrary PE edits.
         return found && (Hash(data,exact->sha256) ||
             (exact->alternateSha256 && Hash(data,exact->alternateSha256)));
     }catch(...){return false;}

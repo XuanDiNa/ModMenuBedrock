@@ -1,6 +1,6 @@
 {
   "name": "ModMenuBedrock",
   "entry": "ModMenuBedrock.dll",
-  "version": "0.6.0-test5-leftalt",
+  "version": "0.6.0-test10-mouse51",
   "type": "preload-native"
 }

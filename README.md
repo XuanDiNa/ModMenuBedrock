@@ -1,4 +1,4 @@
-# ModMenuBedrock
+# ModMenu
 
 [English](#english) · [繁體中文](#繁體中文)
 
@@ -13,7 +13,7 @@ DLL, settings and installation package. Enable one edition at a time.
 
 | Edition | Supported environment | Download | Source and build guide |
 | --- | --- | --- | --- |
-| LeviLauncher native, vanilla route | Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 | [0.6.0-test5-leftalt](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) | [editions/vanilla](editions/vanilla/README.md) · [Build](editions/vanilla/BUILDING.md) |
+| LeviLauncher native, vanilla route | Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05 | [ModMenu 0.6.0-test10](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) | [editions/vanilla](editions/vanilla/README.md) · [Build](editions/vanilla/BUILDING.md) |
 | LeviLamina native client | Minecraft 1.26.60.05 + LeviLamina 26.60.7 | [0.1.0-test2-ll26.60](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.1.0-test2-ll26.60) | [editions/levilamina](editions/levilamina/README.md) · [Build](editions/levilamina/BUILDING.md) |
 
 ### Features
@@ -23,29 +23,27 @@ DLL, settings and installation package. Enable one edition at a time.
 - Optional sliders, UTF-8 text fields and asynchronous plugin workspaces.
 - Ctrl / Shift / Left Alt chords and Esc-to-Unbound capture for compatible plugins.
 - English, Traditional Chinese and Simplified Chinese, following the game language.
-- Resource-pack entry API in the LL release: pack authors can render and position
+- Resource-pack entry API in both current releases: pack authors can render and position
   their own Mods button using `button.modmenu.open`.
 - Exact game-image, native hook ownership, scene and input checks.
 
-For existing LL installations, use the `update` ZIP to retain `config.json`;
+For existing installations, use the matching `update` ZIP to retain `config.json`;
 first installations can use the full `windows-x64` ZIP. Exit Minecraft before
 updating. Each plugin remains responsible for hot reloading settings and
 implementing its own bindings. Workspace providers with binary pins need an
 explicitly compatible version.
 
-[Changes since the previous public release](docs/releases/2026-11-14-cumulative.md)
-cover the intervening diagnostic build, resource-pack API, 26.60 adapter,
-independent LL edition and player-image compatibility fix.
-
-This merge organizes the two published source snapshots on `main`. It does not
-change either runtime or existing Release asset. The original release tags remain
-available. The affected player's LL test2 and combined music-plugin gameplay
-acceptance are still pending; offline verification is recorded separately.
+[Vanilla test10 changes](docs/releases/2026-11-14-vanilla-test10.md) cover the
+resource-pack API, 26.60 native adapter, 26.51 without PreLoader and admission
+for MouseTweaks 0.3.3-test1-vanilla51. A paired native 26.51 session reached Ready
+and opened Mods; full gesture and restart acceptance remains pending.
+The separate LL test2 sources and assets are unchanged; its affected-player and
+music-plugin acceptance is still pending. [Earlier LL changes](docs/releases/2026-11-14-cumulative.md).
 
 Developer entry points: [repository layout and verification](docs/edition-layout.md),
 [vanilla integration](editions/vanilla/integration/README.md),
 [LL integration](editions/levilamina/integration/README.md), and
-[resource-pack buttons](editions/levilamina/integration/RESOURCE_PACKS.md).
+[native resource-pack buttons](editions/vanilla/integration/RESOURCE_PACKS.md).
 Run build commands from the selected edition directory.
 
 ## 繁體中文
@@ -63,19 +61,18 @@ Windows x64 基岩版原生插件選單，可瀏覽已載入插件、調整支�
 - 選用滑動條、UTF-8 文字欄位與非同步插件工作頁。
 - 相容插件支援 Ctrl／Shift／左 Alt 組合鍵，綁定時按 Esc 解除綁定。
 - 跟隨遊戲語言提供英文、繁體中文與簡體中文。
-- LL 發佈版提供材質包入口接口，可透過 `button.modmenu.open` 自訂 Mods 按鈕外觀與位置。
+- 兩個目前發佈版皆提供材質包入口接口，可透過 `button.modmenu.open` 自訂 Mods 按鈕外觀與位置。
 - 精確遊戲映像、原生掛鉤擁有者、場景與輸入檢查。
 
-已有 LL 版時使用 `update` ZIP 保留 `config.json`；首次安裝可用完整 `windows-x64`
+已有安裝時使用對應版本的 `update` ZIP 保留 `config.json`；首次安裝可用完整 `windows-x64`
 ZIP，更新前完全退出 Minecraft。各插件自行負責設定熱更新與快捷鍵觸發，限定
 ModMenu 二進位版本的 Workspace 提供者仍需相容版本。
 
-[累積更新紀錄](docs/releases/2026-11-14-cumulative.md)列出上次公開版之後的診斷版、
-材質包接口、26.60 適配、獨立 LL 版與玩家映像相容修正。
-
-本次合併讓兩份已公開原始碼同時出現在 `main`，執行內容及既有 Release 附件保持
-不變，舊標籤仍可使用。原玩家的 LL test2 實機驗收及與音樂插件的共同測試仍待完成，
-離線驗證結果另行記錄。
+[原版 test10 更新紀錄](docs/releases/2026-11-14-vanilla-test10.md)包含材質包接口、
+26.60 原版適配、26.51 不含 PreLoader 的映像與 MouseTweaks 新版配對。
+已觀察到配套 26.51 就緒及 Mods 開啟；完整拖曳與重新啟動驗收仍待完成。
+獨立 LL test2 的原始碼與附件保持不變，其玩家及音樂插件共同驗收仍待完成。
+[先前 LL 更新紀錄](docs/releases/2026-11-14-cumulative.md)。
 
 開發請先選定版本目錄，再依各自的編譯與整合文件操作；詳見上方開發入口及
 [倉庫結構說明](docs/edition-layout.md)。

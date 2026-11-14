@@ -9,14 +9,14 @@ No LeviLamina SDK, Minecraft SDK, IDA installation or sibling repository is need
 
 ```powershell
 git clone https://github.com/XuanDiNa/ModMenuBedrock.git
-cd ModMenuBedrock
+cd ModMenuBedrock/editions/vanilla
 xmake f -P . -y -m release
 xmake build -P . -y -j 2 ModMenuBedrock
 ```
 
 Output: `build/windows/x64/release/ModMenuBedrock.dll`.
 
-For a fresh Debug/Release candidate build and all 22 public suites:
+For a fresh Debug/Release candidate build and all 23 public suites:
 
 ```powershell
 py -3 -m pip install -r tools/requirements.txt
@@ -27,6 +27,11 @@ This runs synthetic/native-policy, settings/storage, UI, slider, hook-chain,
 pointer-bridge, text editor, workspace, cross-DLL ABI and unsupported-host tests
 plus the v1/v2/v3/v4/v5 schema checks. It never
 starts Minecraft. Results go to the ignored `artifacts/verification.json`.
+The history-projection audits require a full Git checkout (not a shallow clone
+or the automatically generated GitHub source ZIP). The downloadable source
+snapshot can build the DLL; use a full clone for those historical comparisons.
+Pass `-MouseTweaksDLLs <old-dll>,<new-dll>` to include the 24th suite: actual
+companion admission plus appended-byte and same-size hash mutation refusals.
 
 Private image tests can be included with `-GameImagesRoot <local-directory>`.
 That directory must contain one subfolder per exact game version, each with
@@ -36,6 +41,10 @@ use private copy-on-write mappings; they never write the executables. Optional
 the developer from a lawful local install. Without those arguments the tests
 explicitly report those checks as skipped. No game files or extracted fixtures
 are included here.
+
+`-Reviewed51Image <local-exe>` additionally checks the previously reviewed 26.51
+PreLoader fixture alongside the current 26.51 original/launcher images. It
+requires `-GameImagesRoot`; all image mutations remain private to the test.
 
 The private development gate also has two cross-project companion-parser suites.
 Those are not part of this standalone checkout; their companion source excerpts
@@ -55,7 +64,7 @@ maintainer-tested Release artifact. See [provenance](docs/verification.md).
 或其他相鄰專案。
 
 上方第一組命令先取得原始碼再編譯 Release，DLL 位於 `build/windows/x64/release/`。
-第二組命令會執行完整 Debug／Release 編譯、每模式 22 組公開測試與 v1–v5 Schema
+第二組命令會執行完整 Debug／Release 編譯、每模式 23 組公開測試與 v1–v5 Schema
 驗證，不啟動遊戲；結果放在 Git 忽略的 `artifacts/verification.json`。
 
 可選 `-GameImagesRoot` 指定本機遊戲目錄，內含各精確版本資料夾及原始／啟動器 EXE；

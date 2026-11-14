@@ -27,6 +27,12 @@ int wmain(int argc,wchar_t** argv){
     auto check=[&](bool ok,char const* name){++checks;if(!ok){++failures;std::cerr<<"FAIL "<<name<<'\n';}};
     auto result=Invoke();auto originalCaller=caller();
     check(result==0xA1B2C3D4E5F60788ULL && originalCaller && calls()==1 && nativeCalls==1,"baseline real pointer hook forwards once");
+    check(menu::KnownJump(reinterpret_cast<std::uintptr_t>(Target),dll),"actual shared entry resolves to independent hook owner");
+    check(!menu::KnownJump(reinterpret_cast<std::uintptr_t>(Target),GetModuleHandleW(nullptr)),"shared entry rejects a wrong jump owner");
+    check(menu::ClassifyEntry(false,true,3)==menu::Chain::KnownReady,"verified owned jump needs formal Ready");
+    check(menu::ClassifyEntry(false,true,0)==menu::Chain::Wait,"initializing owned jump waits");
+    for(int status:{1,2,4,-1})check(menu::ClassifyEntry(false,true,status)==menu::Chain::Refuse,"non-Ready owned jump refuses");
+    check(menu::ClassifyEntry(false,false,3)==menu::Chain::Refuse,"Ready alone never admits unknown jump owner");
     if(MH_Initialize()!=MH_OK || MH_CreateHook(reinterpret_cast<void*>(Target),reinterpret_cast<void*>(menu::PointerHook),reinterpret_cast<void**>(&menu::MMB_PointerOriginal))!=MH_OK || MH_EnableHook(reinterpret_cast<void*>(Target))!=MH_OK)return 2;
     menu::SharedState state;menu::NativeProfile profile;menu::profile=&profile;menu::shared=&state;
     for(bool active:{false,true}){

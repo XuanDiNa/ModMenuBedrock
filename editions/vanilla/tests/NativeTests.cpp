@@ -9,6 +9,10 @@ int wmain(int argc,wchar_t** argv){using namespace menu;
  if(argc>2){std::cerr<<"Usage: ModMenuNativeTests.exe [private-game-images-root]\n";return 2;}
  Check(AcceptedIdentity({0x8664,0x6AB54E37,0x12C01000,0x128CD801}),"original identity");
  Check(AcceptedIdentity({0x8664,0x6AB54E37,0x12C02000,0x128DA293}),"launcher identity");
+ Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x1383B000,0x134D2DEF}),"60 independently verified original identity");
+ Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBA}),"60 independently verified launcher identity");
+ Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x13847000,0x134E7C20}),"60 exact PreLoader/LeviLauncher image identity");
+ Check(!AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBB}),"60 unknown checksum cannot select native authority");
  Check(!AcceptedIdentity({0x8664,0x6AB54E37,0x12C01000,1}),"checksum mismatch refused");
  std::array<std::byte,32> a{},b{};Check(MatchEntry(a,b),"entry equality");b[0]=std::byte{0xe9};Check(!MatchEntry(a,b),"patched entry rejected");Check(!MatchEntry(a,std::span(b).first(8)),"short signature refused");
  ProfileDiagnostic d;Check(!VerifyLoadedEntry(123,a,b,d) && d.rva==123 && d.failure==ProfileFailure::EntryMismatch,"diagnostic records conflict");
@@ -27,10 +31,21 @@ int wmain(int argc,wchar_t** argv){using namespace menu;
    Check(layout->guiGetter==(build==GameBuild::V45?1736u:1744u) && layout->appOrigin==(build==GameBuild::V45?1544u:1552u),"GUI coordinate getters resolve by build");}
  }
  Check(!LayoutFor(GameBuild::Unsupported) && !ResolveNativeRva(GameBuild::Unsupported,0x48560C0),"unsupported image has no address/layout authority");
+ {
+  auto l=LayoutFor(GameBuild::V60);
+  Check(l && l->clientStack==1512 && l->clientGame==456 && l->stackTop==416 && l->gameTop==424,"60 independently reviewed scene stacks and distinct top slots");
+  Check(l && l->guiGetter==1728 && l->appOrigin==1536 && l->transitionA==1152 && l->transitionB==1157,"60 coordinate and transition layouts");
+  Check(l && l->screenValid==144 && l->screenGui==160 && l->screenClip==112 && l->uiMode==117,"60 screen fields must not reuse old offsets");
+  Check(ResolveNativeRva(GameBuild::V60,0x662FED0)==0x6C0A9A0 && ResolveNativeRva(GameBuild::V60,0xE9958B0)==0xF2D18C0,"60 string overload and constructor-established context table");
+  Check(ResolveNativeRva(GameBuild::V60,0x48560C0)==0x4CCE060 && ResolveNativeRva(GameBuild::V60,0x416FC0)==0xFD729,"60 exact pointer entry and parser return");
+  Check(ResolveNativeRva(GameBuild::V60,0xE9731B0)==0xF2B9330 && !ResolveNativeRva(GameBuild::V60,0x5D9430F),"60 complete client table and omitted passive-only counter");
+  Check(NativeGuards(GameBuild::V60).size()==NativeGuards(GameBuild::V52).size(),"60 retains the complete entry-guard set");
+ }
  NativeProfile invalid;ProfileDiagnostic rejected;
  Check(!invalid.Initialize(GetModuleHandleW(nullptr),&rejected) && !invalid.Base() && invalid.Build()==GameBuild::Unsupported && !invalid.Address(0x48560C0),"test host cannot grant native addresses after rejected initialization");
  if(argc==1)std::cout<<"Private game-image checks skipped; pass a local image root to include them.\n";
- if(argc==2)for(auto version:{L"1.26.45.01",L"1.26.51.01",L"1.26.52.03"})for(auto name:{L"Minecraft.Windows.exe.orig",L"Minecraft.Windows.exe"}){
+ if(argc==2)for(auto version:{L"1.26.45.01",L"1.26.51.01",L"1.26.52.03",L"1.26.60.05"})for(auto name:{L"Minecraft.Windows.exe.orig",L"Minecraft.Windows.exe"}){
+  std::wcout<<L"Checking "<<version<<L"/"<<name<<std::endl;
   auto path=std::wstring(argv[1])+L"\\"+version+L"\\"+name;
   auto file=CreateFileW(path.c_str(),GENERIC_READ,FILE_SHARE_READ,nullptr,OPEN_EXISTING,0,nullptr);LARGE_INTEGER n{};
   if(file==INVALID_HANDLE_VALUE){Check(false,"requested private image is readable");continue;}
@@ -52,9 +67,20 @@ int wmain(int argc,wchar_t** argv){using namespace menu;
     sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_GUI;
     Check(VerifyFile({data,std::size_t(n.QuadPart)}),"51 exact GUI image remains admitted after a console launch");
     sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_CUI;
-    Check(VerifyFile({data,std::size_t(n.QuadPart)})==(std::wstring(name)==L"Minecraft.Windows.exe"),"51 console launcher admitted but unreviewed console original refused");
+    bool preloaderOriginal=sourceNt->OptionalHeader.SizeOfImage==0x12C0C000;
+    Check(VerifyFile({data,std::size_t(n.QuadPart)})==!preloaderOriginal,"51 reviewed console forms admitted; old unreviewed console original refused");
     sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_NATIVE;
     Check(!VerifyFile({data,std::size_t(n.QuadPart)}),"51 arbitrary subsystem is not normalized or accepted");
+    sourceNt->OptionalHeader.Subsystem=subsystem;
+   }
+   if(std::wstring(version)==L"1.26.60.05" && sourceNt->OptionalHeader.SizeOfImage==0x1383C000){
+    auto subsystem=sourceNt->OptionalHeader.Subsystem;
+    sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_GUI;
+    Check(VerifyFile({data,std::size_t(n.QuadPart)}),"60 exact GUI launcher admitted");
+    sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_CUI;
+    Check(VerifyFile({data,std::size_t(n.QuadPart)}),"60 exact console launcher admitted");
+    sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_NATIVE;
+    Check(!VerifyFile({data,std::size_t(n.QuadPart)}),"60 arbitrary subsystem refused");
     sourceNt->OptionalHeader.Subsystem=subsystem;
    }
    auto section=IMAGE_FIRST_SECTION(sourceNt);std::size_t code{};

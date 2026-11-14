@@ -1,9 +1,30 @@
 #include "ModMenu/Definition.h"
 #include "json.hpp"
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#include <bcrypt.h>
+#include <array>
 #include <set>
 #include <stdexcept>
 #include <vector>
 namespace menu {
+std::string_view VerifiedMenu60(std::string_view source){
+ char const* expected=nullptr;std::string_view target;
+ if(source.size()==48127){target="start";expected="5F393CD5869DE6B241C91A2B6189551762017FA71CD04CB3097521A28C987813";}
+ else if(source.size()==48802){target="pause";expected="07D478EE18CA1A7D83897A36353777B97AFDD876EAFD9AFCA7093A9E69EE72BC";}
+ else return {};
+ BCRYPT_ALG_HANDLE algorithm{};BCRYPT_HASH_HANDLE handle{};DWORD size{},used{};
+ if(BCryptOpenAlgorithmProvider(&algorithm,BCRYPT_SHA256_ALGORITHM,nullptr,0)<0)return {};
+ bool ok=BCryptGetProperty(algorithm,BCRYPT_OBJECT_LENGTH,reinterpret_cast<PUCHAR>(&size),4,&used,0)>=0;
+ std::vector<unsigned char> object(ok?size:0);std::array<unsigned char,32> digest{};
+ if(ok)ok=BCryptCreateHash(algorithm,&handle,object.data(),size,nullptr,0,0)>=0;
+ if(ok)ok=BCryptHashData(handle,reinterpret_cast<PUCHAR>(const_cast<char*>(source.data())),ULONG(source.size()),0)>=0 && BCryptFinishHash(handle,digest.data(),32,0)>=0;
+ if(handle)BCryptDestroyHash(handle);BCryptCloseAlgorithmProvider(algorithm,0);
+ constexpr char hex[]="0123456789ABCDEF";
+ for(unsigned i=0;ok && i<32;++i)ok=hex[digest[i]>>4]==expected[i*2] && hex[digest[i]&15]==expected[i*2+1];
+ return ok?target:std::string_view{};
+}
 namespace {
 using Json=nlohmann::ordered_json;
 constexpr std::size_t Limit=1024*1024;
@@ -77,6 +98,10 @@ bool InsertModsDefinition(std::string const& source,std::string& output,std::str
   };
   auto j=Json::parse(source,callback,true,true);
   if(!expectedNamespace.empty() && (!j.is_object() || j.value("namespace",std::string{})!=expectedNamespace))return false;
+  // A pack-managed entry owns its placement and style. This reserved control
+  // was already refused by the legacy mmb_ collision rule. Keep that behavior
+  // explicit for the public contract; never overwrite or validate its design.
+  if(j.is_object() && j.contains(ResourcePackEntryMarker))return false;
   if(j.is_object() && j.value("namespace",std::string{})=="pause")return InsertPause(j,source,output);
   if(!j.is_object() || j.value("namespace",std::string{})!="start" || !j.contains("stacked_row") ||
    !j["stacked_row"].is_object() || j["stacked_row"].value("type",std::string{})!="panel")return false;

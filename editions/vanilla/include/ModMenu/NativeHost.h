@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "NativeProfile.h"
+#include "DefinitionDiagnostics.h"
 #include <mutex>
 #include <atomic>
 namespace menu {
@@ -13,6 +14,9 @@ struct RenderReceipt {
 };
 struct SharedState {
  std::mutex mutex;Menu menu;
+ std::array<DefinitionProbe,8> definitionProbes{};
+ std::array<std::atomic<bool>,8> definitionProbeReady{};
+ std::atomic<unsigned> definitionProbeClaims{};
  std::array<RenderReceipt,12> renderReceipts{};unsigned renderReceiptCount{};
  std::atomic<int> status{0};
  std::atomic<unsigned long long> draws{},inputs{},eligible{},faults{},unknownScenes{};

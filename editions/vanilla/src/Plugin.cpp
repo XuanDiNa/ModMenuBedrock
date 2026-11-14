@@ -21,7 +21,7 @@ DWORD WINAPI Worker(void*){
         auto dir=Directory();if(dir.empty()){state.status.store(4);return 0;}
         std::ofstream log(dir/L"ModMenuBedrock.log",std::ios::app);
         auto write=[&](std::string const& s){log<<GetTickCount64()<<' '<<s<<'\n';log.flush();};
-        write("ModMenuBedrock 0.6.0-test5-leftalt; pid="+std::to_string(GetCurrentProcessId())+"; unchanged exact three-version profiles / settings v1+v2+v3 / opt-in generic workspaces and worker mailbox / no payload logging; x64; no LeviLamina");
+        write("ModMenuBedrock 0.6.0-test10-mouse51; pid="+std::to_string(GetCurrentProcessId())+"; exact four-version profiles / resource-pack entry API v1 / bounded definition authority / no payload logging; x64; no LeviLamina");
         menu::ProfileDiagnostic diagnostic;
         if(!profile.Initialize(GetModuleHandleW(nullptr),&diagnostic)){state.status.store(1);write("INACTIVE: "+menu::DescribeProfileDiagnostic(diagnostic));return 0;}
         write(std::string("Verified native profile: ")+profile.Version());
@@ -50,8 +50,14 @@ DWORD WINAPI Worker(void*){
         if(result!=menu::InstallResult::Ready){menu::DeactivateNative();state.status.store(2);return 0;}
         state.status.store(3,std::memory_order_release);
         auto lastCatalog=GetTickCount64()-2000,lastLog=GetTickCount64();unsigned long long priorFaults{};unsigned loggedReceipts{};
+        std::array<bool,8> loggedDefinitionProbes{};
         while(true){
             auto now=GetTickCount64();
+            for(unsigned i=0;i<loggedDefinitionProbes.size();++i){
+                if(!loggedDefinitionProbes[i] && state.definitionProbeReady[i].load(std::memory_order_acquire)){
+                    write(menu::DescribeDefinitionProbe(state.definitionProbes[i]));loggedDefinitionProbes[i]=true;
+                }
+            }
             auto snapshots=menu::Workspaces().Snapshots();
             {std::lock_guard lock(state.mutex);auto&m=state.menu;m.workspaces=std::move(snapshots);if(m.workspaceOpen){auto s=m.WorkspaceFor(m.workspace.snapshot.definition->id);if(s&&s->session==m.workspace.snapshot.session)m.workspace.Accept(*s);else{m.workspaceOpen=false;m.workspace.Clear();}}}
             bool paste=false,copy=false;std::uint64_t editGeneration{};std::string copied;
@@ -100,7 +106,7 @@ DWORD WINAPI Worker(void*){
 }
 }
 extern "C" __declspec(dllexport) int MMB_GetStatus(){return state.status.load(std::memory_order_acquire);}
-extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.6.0-test5-leftalt";}
+extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.6.0-test10-mouse51";}
 BOOL APIENTRY DllMain(HMODULE instance,DWORD reason,LPVOID){
     if(reason==DLL_PROCESS_ATTACH){module=instance;auto thread=CreateThread(nullptr,0,Worker,nullptr,0,nullptr);if(thread)CloseHandle(thread);else state.status.store(4);}
     return TRUE;

@@ -31,7 +31,7 @@ local function ui_test(name, tests, native)
         add_syslinks("user32", "bcrypt")
         add_cxflags("/utf-8", "/W4", "/EHsc")
         if native then
-            add_files("src/Definition.cpp", "src/NativeProfile.cpp", "src/PointerBridge.asm")
+            add_files("src/Definition.cpp", "src/DefinitionDiagnostics.cpp", "src/NativeProfile.cpp", "src/PointerBridge.asm")
             add_packages("minhook")
         end
     target_end()
@@ -59,6 +59,7 @@ target("ModMenuWorkspacePreview")
     add_cxflags("/utf-8", "/W4", "/EHsc")
 target_end()
 ui_test("PointerChain", {"tests/PointerChainTests.cpp"}, true)
+ui_test("MouseTweaksAdmission", {"tests/MouseTweaksAdmissionTests.cpp"}, true)
 
 -- SettingsTransactionTests includes Settings.cpp to exercise its private helpers.
 -- Do not link a second Settings.cpp object into this target.
@@ -85,10 +86,19 @@ target("ModMenuNativeTests")
     add_cxflags("/utf-8", "/W4", "/EHsc")
 target_end()
 
+target("ModMenuNative51VariantsTests")
+    set_kind("binary")
+    add_files("tests/Native51VariantsTests.cpp", "src/NativeProfile.cpp")
+    add_includedirs("include")
+    add_syslinks("bcrypt")
+    add_cxflags("/utf-8", "/W4", "/EHsc")
+target_end()
+
 target("ModMenuDefinitionTests")
     set_kind("binary")
     add_files("tests/DefinitionTests.cpp", "src/Definition.cpp")
     add_includedirs("include", "vendor/json")
+    add_syslinks("bcrypt")
     add_cxflags("/utf-8", "/W4", "/EHsc")
 target_end()
 

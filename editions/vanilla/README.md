@@ -1,23 +1,6 @@
-# ModMenuBedrock
+# ModMenu
 
 [English](#english) · [繁體中文](#繁體中文)
-
-### Editions / 版本選擇
-
-| Edition / 版本 | Game / 遊戲 | Download / 下載 |
-| --- | --- | --- |
-| LeviLauncher native / 原版路線 | 1.26.45.01 / 1.26.51.01 / 1.26.52.03 | [0.6.0-test5-leftalt](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) |
-| LeviLamina native client / 獨立 LL 版 | 1.26.60.05 + LeviLamina 26.60.7 | [0.1.0-test2-ll26.60](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.1.0-test2-ll26.60) |
-
-The new LL prerelease includes the resource-pack button API and reviewed 26.60
-adapter, plus the player-image compatibility fix. Its source and packages are
-separate from this vanilla branch. Read the [cumulative changes](docs/releases/2026-11-14-cumulative.md)
-or browse the [LL source](https://github.com/XuanDiNa/ModMenuBedrock/tree/codex/levilamina-edition).
-Gameplay acceptance for the affected player remains pending. Load one edition only.
-
-新版 LL 預發佈版包含材質包按鈕接口、26.60 適配及玩家映像相容修正；原始碼與套件
-獨立於本原版分支。詳見上方累積更新與 LL 原始碼，原玩家實機驗收仍待完成；只啟用
-其中一個版本。以下說明適用於原版路線。
 
 ## English
 
@@ -25,11 +8,15 @@ A native plugin menu for Minecraft Bedrock and LeviLauncher, inspired by
 [Java Mod Menu](https://github.com/TerraformersMC/ModMenu).
 No LeviLamina API, resource pack or server component is required.
 
-**Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03**
+**Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05**
 
-**0.6.0-test5-leftalt — Prerelease · MIT License**
+**ModMenu 0.6.0-test10 — Prerelease · MIT License**
 
-[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) ·
+This release adds [26.51 image and MouseTweaks pairing fixes](docs/releases/0.6.0-test10-mouse51.md),
+the 26.60 native adapter and the resource-pack button API. The inspected 26.51
+session reached Ready and opened Mods; full gesture/restart acceptance remains pending.
+
+[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) ·
 [Report an issue](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### Features
@@ -54,7 +41,7 @@ No LeviLamina API, resource pack or server component is required.
    launcher enabled/disabled state.
 3. Start through LeviLauncher. Click Mods in the main or pause menu, or press F10.
 
-One DLL supports the three exact builds above. This release contains **ModMenu
+One DLL supports the four exact builds above. This release contains **ModMenu
 only**. Keep one active copy of the DLL and preserve the launcher-managed
 manifest name (`manifest.json` or `manifest.json.close`). No default configuration
 or other plugin update is included.
@@ -108,11 +95,15 @@ Build instructions: [BUILDING.md](BUILDING.md).
 Minecraft 基岩版／LeviLauncher 原生插件選單。
 不需要 LeviLamina API、資源包或服務端組件。
 
-**Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03**
+**Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05**
 
-**0.6.0-test5-leftalt — 預發佈版 · MIT 授權**
+**ModMenu 0.6.0-test10 — 預發佈版 · MIT 授權**
 
-[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) ·
+本版補齊 [26.51 映像與 MouseTweaks 配對](docs/releases/0.6.0-test10-mouse51.md)，
+包含 26.60 原版適配及材質包按鈕接口。已觀察到 26.51 就緒與 Mods 開啟；
+完整拖曳及重新啟動驗收仍待完成。
+
+[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) ·
 [回報問題](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### 功能
@@ -135,7 +126,7 @@ Minecraft 基岩版／LeviLauncher 原生插件選單。
    目錄。保留原有 `config.json`、日誌及啟動器啟用／停用狀態。
 3. 透過 LeviLauncher 啟動，點擊主選單／暫停選單的 Mods，或按 F10。
 
-上述三個精確版本共用一份 DLL，本次**只發佈 ModMenu**。只保留一份載入中的 DLL，
+上述四個精確版本共用一份 DLL，本次**只發佈 ModMenu**。只保留一份載入中的 DLL，
 並維持啟動器管理的 `manifest.json` 或 `manifest.json.close` 檔名。
 套件不含預設設定檔，也不包含其他插件更新。
 

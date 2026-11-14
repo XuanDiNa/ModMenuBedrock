@@ -1,0 +1,11 @@
+{
+  "releaseName": "ModMenu 0.6.0-test10",
+  "tag": "v0.6.0-test10",
+  "version": "0.6.0-test10-mouse51",
+  "sourceTree": "c7d71c4ed95513d783f872d5159f6c1e2c583667",
+  "dllSHA256": "2039530A342CA2E44D8F7A3AC7DB85BB66546E2BBB720EF9CE14392B13005482",
+  "dllBytes": 987648,
+  "companionDLLSHA256": "77425954246FCD765070911FAF6135C7E60A4A5E4946FC84C5A1FDC88C461431",
+  "companionDLLBytes": 158720,
+  "gameplayEvidence": "26.51 Ready and Mods open event observed; full gestures/restart and newly built cross-version gameplay acceptance pending"
+}
