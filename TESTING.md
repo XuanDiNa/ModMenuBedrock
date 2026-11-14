@@ -1,55 +1,37 @@
-# Testing / 測試
+# 0.1.0-test2-ll26.60 manual test / 人工測試
 
-## English
+Windows x64, Minecraft **1.26.60.05**, official **LeviLamina 26.60.7**. Gameplay acceptance pending.
 
-On 2026-11-11 the maintainer reported the latest ModMenu compatibility package
-working on **1.26.45.01 and 1.26.51.01**. Its DLL SHA-256 is
-`FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`.
-This is basic manual acceptance, not a recorded per-step benchmark or exhaustive
-acceptance of every environment. The exact 1.26.52.03 native profile remains
-supported and was included in the offline checks.
+**test2 targeted check:** keep the affected player's EXE, launcher console option
+and other plugins unchanged. Replace only the independent ModMenuLL package
+after fully exiting Minecraft; retain the current `config.json` and logs. The
+new log must say `0.1.0-test2-ll26.60` and pass `Verified native profile:
+1.26.60.05`. Test Mods/F10 in the main menu and one full restart. If another
+guard refuses, return that new complete log; do not change game files.
 
-Debug and Release each passed 22 suites, including 94 exact original/launcher
-image checks, 431 binding checks, pointer/focus/Workspace and real C ABI tests.
-Schema/parser agreement covered 3,525 cases. Private vanilla-menu fixtures were
-unavailable and skipped; synthetic definitions were tested. No test launched Minecraft.
+**test2 玩家驗收：** 完全退出遊戲後，只更新此獨立 ModMenuLL 套件，保留現有
+`config.json` 和日誌。保持玩家原 EXE、控制台選項及其他插件不變；新日誌須顯示
+`0.1.0-test2-ll26.60` 及 `Verified native profile: 1.26.60.05`。測主選單
+Mods／F10，再完整重啟一次。如果出現新的拒絕原因，回傳完整新日誌。
 
-For focused regression checks:
+1. Fully exit Minecraft. Preserve and disable vanilla ModMenu; keep LeviLamina enabled.
+2. Extract to the instance root: `mods/ModMenuBedrockLL/`. Do not rename the DLL.
+3. Main menu: check Mods, F10, clicks, scrolling and Escape/Done returning to the original menu.
+4. Configure: test Cancel/Apply, slider, text editing/paste and Ctrl/Shift/Left Alt chords. Reopen to verify persistence; actual hot reload depends on the provider.
+5. World pause menu: repeat F10/return. F10 must stay blocked in HUD, inventory and vanilla settings.
+6. Switch to browser and return. Keep the page if its original scene is valid, but clear held-key/drag/capture transients. Changing world or scene must not restore an invalid page.
+7. Workspace: use an explicitly adapted provider. Providers pinning the vanilla DLL need their own update. Do not bypass their admission checks.
+8. If using a resource-pack entry, test main and pause menus. Fully exit and restart once.
 
-1. Check Mods / F10 on the main and pause menus, including a normal cold restart.
-2. Check pointer clicks, scrolling, Apply/Cancel and Escape navigation.
-3. In ModMenu's own shortcut field, try Ctrl+K, Shift+K and Left Alt+K. Apply,
-   reopen, check persistence and test the selected shortcut from the main/pause
-   menu. Restore your preferred shortcut afterward.
-4. Switch briefly to another app and return. Confirm the permitted page remains
-   and a held key or stale click does not activate anything.
+1. 完全退出遊戲，保留並停用原版 ModMenu，啟用 LeviLamina 26.60.7。
+2. 解壓到 1.26.60.05 實例根目錄，確認為 `mods/ModMenuBedrockLL/`，不要改 DLL 名稱。
+3. 主選單測試 Mods 按鈕、F10、點擊、捲動、Escape／Done 返回。
+4. Configure 測試 Cancel、Apply、滑動條、文字貼上、Ctrl／Shift／左 Alt 組合鍵，重開確認儲存。
+5. 進世界後在暫停選單再測一次；HUD、背包、原版設定頁仍不得開啟 Mods。
+6. 切到瀏覽器再回來，確認有效頁面保留，按下／拖動／綁鍵暫態清除。更換世界或場景後，不應恢復失效頁面。
+7. Workspace 只測已明確適配此 DLL 的提供者；固定舊 DLL 雜湊的插件需另行更新。
+8. 如有材質包入口，測試主選單與暫停選單，最後完整重啟一次。
 
-Plugins interpret and hot reload their own settings; their chord actions are
-outside this ModMenu-only acceptance. Long sessions, every GUI scale, OreUI,
-all providers and arbitrary custom menus are not exhaustively verified.
-Do not bypass INACTIVE refusals; report the version and log reason.
-See [build checks](BUILDING.md) and [installation](docs/releases/package-installation.md).
+異常時提供 `mods/ModMenuBedrockLL/ModMenuBedrockLL.log` 與 LeviLamina 載入日誌，並註明控制台選項是否啟用。保留原設定即可。
 
-## 繁體中文
-
-2026-11-11 維護者回報最新 ModMenu 相容套件在 **1.26.45.01、1.26.51.01** 使用正常。
-DLL SHA-256 為 `FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74`。
-這是基本人工驗收，不自行推定每一步均有個別紀錄，也不是效能數據或全部環境的完整驗證。
-1.26.52.03 的精確原生配置保留支援，亦已納入本輪離線檢查。
-
-Debug／Release 每模式各通過 22 組測試，包括 94 項原始／啟動器映像、431 項綁鍵、
-滑鼠、焦點、Workspace 與實際跨 DLL C ABI；Schema／解析器對照有 3,525 個案例。
-私有原版選單資料無法取得，已略過，合成選單測試正常執行；自動測試沒有啟動遊戲。
-
-安裝後可做精簡回歸：
-
-1. 主／暫停選單 Mods、F10，並正常退出後冷啟動一次。
-2. 滑鼠、捲動、Apply／Cancel 及 Escape 返回。
-3. ModMenu 自己的快捷鍵依次試 Ctrl+K、Shift+K、左 Alt+K，Apply 後重開確認保存，
-   在主／暫停選單測試選定組合鍵，之後恢復偏好的快捷鍵。
-4. 暫切其他程式再回來，確認允許的頁面保留，按住的鍵及舊點擊不會造成誤觸。
-
-各插件自行解析及熱更新設定，其組合鍵功能不屬本輪 ModMenu 驗收。
-長時間使用、所有 GUI 比例、OreUI、全部提供者及任意改版選單尚未全面驗證。
-遇到 INACTIVE 應回報版本及日誌原因，不要取消保護。
-詳見[建置檢查](BUILDING.md)及[安裝](docs/releases/package-installation.md)。
+For failures, provide the edition's log and LL loader log, noting the console option. Preserve your settings.

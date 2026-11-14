@@ -15,6 +15,8 @@
 namespace menu {
 namespace {
 NativeProfile const* profile{};SharedState* shared{};std::atomic<bool> ready{false};
+std::atomic<bool> deactivated{false};
+bool UiActive(){return !deactivated.load(std::memory_order_acquire)&&ready.load(std::memory_order_acquire);}
 using Dtor=void*(*)(void*);Dtor originalDtor{};
 using Pointer=std::uintptr_t(*)(void*,void const*,char);
 }
@@ -31,6 +33,7 @@ using DefinitionLoad=void(*)(void*,void const*);DefinitionLoad originalDefinitio
 using JsonParse=unsigned char(*)(void*,char const*,std::size_t,void*,char);JsonParse originalJsonParse{};
 using ControllerEvent=unsigned(*)(void*,void const*);ControllerEvent originalControllerEvent{};
 std::atomic<bool> definitionReady{false};bool minhookInitialized{};
+bool DefinitionsActive(){return !deactivated.load(std::memory_order_acquire)&&definitionReady.load(std::memory_order_acquire);}
 thread_local void* eventScene{};
 struct DefinitionLifetime {
     std::string bytes;std::string_view target;bool allowed;DefinitionLifetime* previous;
@@ -49,6 +52,7 @@ struct Caret {int position{-1};bool render{};};
 static_assert(sizeof(NativeText)==32 && sizeof(Measure)==12 && sizeof(Caret)==8);
 bool ReadBytes(void const* p,void* out,std::size_t n) noexcept{__try{if(!p)return false;std::memcpy(out,p,n);return true;}__except(EXCEPTION_EXECUTE_HANDLER){return false;}}
 template<class T>T Read(void const* p,std::size_t offset=0){T out{};if(p)ReadBytes(static_cast<std::byte const*>(p)+offset,&out,sizeof out);return out;}
+#include "DefinitionDiagnostics.inl"
 bool ReadLanguageCode(void* language,Locale& out) noexcept{
     // Localization::language code: constructor 45DD40, consumer 45AF30.
     auto length=Read<std::size_t>(language,56),capacity=Read<std::size_t>(language,64);
@@ -100,7 +104,9 @@ unsigned char ParseDefinition(std::uintptr_t caller,void* reader,char const* byt
     if(scope && scope->allowed && caller==profile->Address(0x416FC0) && length && length<=1024*1024){
         try{
             std::string source(length,'\0');
-            if(ReadBytes(bytes,source.data(),length) && InsertModsDefinition(source,scope->bytes,scope->target)){
+            if(ReadBytes(bytes,source.data(),length) &&
+               (profile->Build()!=GameBuild::V60 || VerifiedMenu60(source)==scope->target) &&
+               InsertModsDefinition(source,scope->bytes,scope->target)){
                 input=scope->bytes.c_str();count=scope->bytes.size();shared->definitionsPatched.fetch_add(1);
             }else shared->definitionsRefused.fetch_add(1);
         }catch(...){shared->definitionsRefused.fetch_add(1);}
@@ -112,8 +118,24 @@ unsigned char ParseDefinition(std::uintptr_t caller,void* reader,char const* byt
 unsigned char JsonParseHook(void* reader,char const* bytes,std::size_t count,void* json,char comments){
     return ParseDefinition(reinterpret_cast<std::uintptr_t>(_ReturnAddress()),reader,bytes,count,json,comments);
 }
+std::string_view AuditedDefinition60(void const* values){
+    // FD6B0 receives 216-byte records. Its callback stores a Json result,
+    // not a resource path. Only a single exact audited vanilla payload grants
+    // automatic insertion authority; arbitrary names/namespaces never do.
+    auto begin=Read<std::uintptr_t>(values),end=Read<std::uintptr_t>(values,8),limit=Read<std::uintptr_t>(values,16);
+    if(!begin || end<begin || limit<end || limit-begin>216*256 || (end-begin)%216)return {};
+    shared->definitionCandidates.fetch_add(1);shared->definitionLayers.store(unsigned((end-begin)/216));
+    if(end-begin!=216)return {};
+    auto record=reinterpret_cast<void const*>(begin);
+    auto length=Read<std::size_t>(record,16),capacity=Read<std::size_t>(record,24);
+    if(!length || length>1024*1024 || capacity<length || capacity>1024*1024)return {};
+    auto chars=capacity<16?reinterpret_cast<char const*>(record):Read<char const*>(record);
+    try{std::string source(length,'\0');return ReadBytes(chars,source.data(),length)?VerifiedMenu60(source):std::string_view{};}
+    catch(...){return {};}
+}
 std::string_view AuditedDefinition(void* callback,void const* values){
-    if(!definitionReady.load(std::memory_order_acquire) || !profile->Table(callback,0xE75C408))return {};
+    if(!DefinitionsActive() || !profile->Table(callback,0xE75C408))return {};
+    if(profile->Build()==GameBuild::V60)return AuditedDefinition60(values);
     auto name=static_cast<std::byte*>(callback)+8;
     auto length=Read<std::size_t>(name,16),capacity=Read<std::size_t>(name,24);
     // Both audited paths are exactly 20 bytes. Namespace is bound to the
@@ -126,6 +148,7 @@ std::string_view AuditedDefinition(void* callback,void const* values){
     auto begin=Read<std::uintptr_t>(values),end=Read<std::uintptr_t>(values,8),limit=Read<std::uintptr_t>(values,16);
     shared->definitionCandidates.fetch_add(1);
     shared->definitionLayers.store(begin && end>=begin && (end-begin)%48==0 && (end-begin)/48<=256?unsigned((end-begin)/48):0);
+    ObserveDefinition(values,target);
     // Multiple resource layers may contain modifications/overrides. This
     // initial native transform refuses those rather than reinterpreting them.
     return begin && end>begin && end-begin==48 && limit>=end && limit-begin<=48*256?target:std::string_view{};
@@ -206,7 +229,7 @@ void PasteIfRequested(Menu& m,Frame const& f,std::string(*read)()=Clipboard){
     if(m.TakePasteRequest(f))m.Input({Kind::Text,0,0,0,0,read()},f);
 }
 bool NativeInput(Event const& e,void* scene){
-    if(!ready.load(std::memory_order_acquire))return false;
+    if(!UiActive())return false;
     try{auto f=SafeFrame(scene);std::lock_guard lock(shared->mutex);auto input=e;
         if(input.kind==Kind::Key && f.eligible && f.foreground && !f.observerOnly){
             input.modifiers={(GetAsyncKeyState(VK_SHIFT)&0x8000)!=0,(GetAsyncKeyState(VK_CONTROL)&0x8000)!=0,
@@ -230,10 +253,10 @@ bool TextValue(void const* value,std::string& out){
 }
 bool HandleRaw(void* scene,int key,char type,char state){
     bool consumed=false;
-    if(ready.load()){shared->rawEvents.fetch_add(1);shared->lastRawKey.store(key);shared->lastRawType.store(type);shared->lastRawState.store(state);if(type==4)shared->keyEvents.fetch_add(1);}
+    if(UiActive()){shared->rawEvents.fetch_add(1);shared->lastRawKey.store(key);shared->lastRawType.store(type);shared->lastRawState.store(state);if(type==4)shared->keyEvents.fetch_add(1);}
     if(type==4 && (state==0 || state==1)){
         consumed=NativeInput({Kind::Key,0,0,key,state},scene);
-    }else if(ready.load()){
+    }else if(UiActive()){
         auto f=SafeFrame(scene);std::lock_guard lock(shared->mutex);shared->menu.Tick(f);auto& m=shared->menu;
         consumed=f.eligible && f.foreground && (m.BlocksMapped() || (!m.nativeEntry && type==1 && Arrange(m.config,f).button.Contains(m.pointerX,m.pointerY)));
     }
@@ -250,7 +273,7 @@ std::uint64_t UpstreamRawHook(void* adapter,void const* key,void const* type,voi
     // This adapter forwards only actual native events. Local physical menu
     // sampling in Render is independent and never calls a native input method.
     unsigned k{};unsigned char t{},s{},r{};
-    if(ready.load() && ReadBytes(key,&k,4) && ReadBytes(type,&t,1) && ReadBytes(state,&s,1) && ReadBytes(remap,&r,1)){
+    if(UiActive() && ReadBytes(key,&k,4) && ReadBytes(type,&t,1) && ReadBytes(state,&s,1) && ReadBytes(remap,&r,1)){
         if(HandleRaw(RawScene(client),int(k),char(t),char(s)))return 0;
     }
     return originalUpstreamRaw(adapter,key,type,state,remap,client);
@@ -258,7 +281,7 @@ std::uint64_t UpstreamRawHook(void* adapter,void const* key,void const* type,voi
 }
 extern "C" bool MMB_PointerObserver(void* scene,void const* event,char,std::uintptr_t caller) noexcept{
     float x{},y{};bool consumed=false;
-    try{if(ready.load()){
+    try{if(UiActive()){
         shared->pointerEvents.fetch_add(1);
         if(caller==profile->Address(0x5D9430F))shared->primaryPointerEvents.fetch_add(1);
         auto f=SafeFrame(scene);
@@ -276,16 +299,16 @@ void ForwardButton(void* scene,unsigned id,char focus,bool down){
     __finally{eventScene=previous;}
 }
 unsigned ControllerEventHook(void* controller,void const* event){
-    if(ready.load(std::memory_order_acquire) && eventScene){
+    if(UiActive() && eventScene){
         shared->scopedControllerEvents.fetch_add(1);auto table=Read<std::uintptr_t>(controller);
         shared->lastControllerTable.store(table>=profile->Base() && table-profile->Base()<0x12C02000?unsigned(table-profile->Base()):0);
     }
-    if(ready.load(std::memory_order_acquire) && eventScene &&
+    if(UiActive() && eventScene &&
        (profile->Table(controller,0xE900070) || profile->Table(controller,0xE804440))){
         std::array<unsigned char,18> bytes{};
         if(ReadBytes(event,bytes.data(),bytes.size())){
             unsigned tag{},id{};std::memcpy(&tag,bytes.data(),4);std::memcpy(&id,bytes.data()+8,4);
-            if(tag==1 && id==ModsEventId && bytes[16]<=2 && bytes[17]<=2){
+            if(tag==1 && IsModsOpenEvent(id) && bytes[16]<=2 && bytes[17]<=2){
                 shared->modsEvents.fetch_add(1);
                 auto f=SafeFrame(eventScene);auto view=Read<void*>(eventScene,64);
                 if(f.eligible && f.foreground && Read<void*>(view,profile->Layout().viewController)==controller){
@@ -301,8 +324,8 @@ unsigned ControllerEventHook(void* controller,void const* event){
 void ButtonEvent(void* scene,unsigned id,char focus,bool down){
     // Read the exact current UI logical cursor. The outer pointer adapter
     // updates it normally when not modal; while modal our own value is used.
-    auto f=ready.load()?SafeFrame(scene):Frame{};bool consumed=false;
-    if(ready.load()){
+    auto f=UiActive()?SafeFrame(scene):Frame{};bool consumed=false;
+    if(UiActive()){
         (down?shared->downEvents:shared->upEvents).fetch_add(1);shared->lastMappedId.store(id);
         std::lock_guard lock(shared->mutex);auto& m=shared->menu;m.Tick(f);
         int button=id==0xB447F8E7 || id==0x588FCBB0?1:id==0x2A5C0ECC?2:0;
@@ -316,7 +339,7 @@ void ButtonEvent(void* scene,unsigned id,char focus,bool down){
 void DownHook(void* s,unsigned id,char f){ButtonEvent(s,id,f,true);}
 void UpHook(void* s,unsigned id,char f){ButtonEvent(s,id,f,false);}
 void TextHook(void* scene,void const* text,char focus){std::string value;
-    if(ready.load())shared->textEvents.fetch_add(1);
+    if(UiActive())shared->textEvents.fetch_add(1);
     bool valid=TextValue(text,value);
     // Raw keys own ASCII typing, even without a native TextEdit component.
     // Do not duplicate a secondary native text event for the same key.
@@ -325,7 +348,7 @@ void TextHook(void* scene,void const* text,char focus){std::string value;
     if(!consumed)originalText(scene,text,focus);
 }
 void WheelHook(void* scene,unsigned char id,float x,float y,char focus){
-    if(ready.load())shared->wheelEvents.fetch_add(1);
+    if(UiActive())shared->wheelEvents.fetch_add(1);
     int amount=y>0?1:y<0?-1:x>0?1:x<0?-1:0;
     if(!NativeInput({Kind::Wheel,0,0,0,amount},scene))originalWheel(scene,id,x,y,focus);
 }
@@ -341,9 +364,9 @@ void NativeString(void* context,Paint const& paint){
 // 4830560 enables screen+125; 463F2B0 disables it before our destructor
 // callback. Native late UI draws (4352910 / 47A3100) save/set/restore it.
 // This scope never changes projection matrices or leaves a flag enabled.
-bool WithNativeUiMode(void* screen,void(*submit)(void*),void* user) noexcept{
-    if(!screen || !submit)return false;
-    unsigned char previous{};auto flag=static_cast<unsigned char*>(screen)+125;
+bool WithNativeUiMode(void* screen,void(*submit)(void*),void* user,unsigned offset=125) noexcept{
+    if(!screen || !submit || (offset!=125 && offset!=117))return false;
+    unsigned char previous{};auto flag=static_cast<unsigned char*>(screen)+offset;
     if(!ReadBytes(flag,&previous,1) || previous>1)return false;
     bool ok=false;
     __try{
@@ -367,7 +390,7 @@ bool DrawNative(void* context,std::vector<Paint> const& paints) noexcept{
         if(!profile->Table(context,0xE9958B0) || !ReadBytes(static_cast<std::byte*>(context)+296,saved.data(),17))return false;
         __try{
             profile->Function<void(*)(void*)>(0x6637B00)(context);clipping=true;profile->Function<void(*)(void*)>(0x6637AF0)(context);
-            PaintWork work{context,&paints};ok=WithNativeUiMode(Read<void*>(context,16),SubmitPaints,&work);
+            PaintWork work{context,&paints};ok=WithNativeUiMode(Read<void*>(context,16),SubmitPaints,&work,profile->Layout().uiMode);
         }__finally{
             if(clipping){profile->Function<void(*)(void*)>(0x6637B90)(context);std::memcpy(static_cast<std::byte*>(context)+296,saved.data(),17);}
         }
@@ -391,15 +414,17 @@ void ObserveRender(void* context,void* scene,Frame const& f){
     auto rva=[](std::uintptr_t p){return p>=profile->Base() && p-profile->Base()<0x12C02000?std::uint32_t(p-profile->Base()):0u;};
     auto renderer=Read<void*>(scene,32);receipt.rendererTable=rva(Read<std::uintptr_t>(renderer));
     receipt.beginMethod=rva(profile->Virtual(renderer,8));receipt.endMethod=rva(profile->Virtual(renderer,16));
-    auto screen=Read<void*>(context,16),validity=Read<void*>(screen,152),gui=Read<void*>(screen,168);
+    auto const& layout=profile->Layout();
+    auto screen=Read<void*>(context,16),validity=Read<void*>(screen,layout.screenValid),gui=Read<void*>(screen,layout.screenGui);
     if(validity && Read<unsigned char>(validity) && gui){receipt.nativeWidth=Read<float>(gui,80);receipt.nativeHeight=Read<float>(gui,84);}
-    receipt.contextAlpha=Read<float>(context,56);receipt.depth=Read<unsigned char>(context,200);receipt.clip=Read<unsigned char>(screen,120);
-    auto gpu=Read<void*>(screen,16),stencil=Read<void*>(gpu,264);receipt.stencil=Read<unsigned short>(stencil);
+    receipt.contextAlpha=Read<float>(context,56);receipt.depth=Read<unsigned char>(context,200);receipt.clip=Read<unsigned char>(screen,layout.screenClip);
+    // The optional stencil diagnostic has no independently established 60 layout.
+    if(profile->Build()!=GameBuild::V60){auto gpu=Read<void*>(screen,16),stencil=Read<void*>(gpu,264);receipt.stencil=Read<unsigned short>(stencil);}
     auto state=Read<void*>(screen,32),uniform=Read<void*>(state,336),alpha=Read<void*>(uniform,64);receipt.shaderAlpha=Read<float>(alpha);
     shared->renderReceipts[shared->renderReceiptCount++]=receipt;
 }
 void Render(void* context){
-    if(!ready.load() || !profile->Table(context,0xE9958B0))return;
+    if(!UiActive() || !profile->Table(context,0xE9958B0))return;
     auto scene=Read<void*>(context,288);auto f=SafeFrame(scene);std::vector<Paint> paints;
     auto locale=f.eligible && !f.observerOnly?CurrentLocale():Locale::English;
     if(f.eligible)(f.foreground?shared->foregroundRenders:shared->backgroundRenders).fetch_add(1);
@@ -454,7 +479,7 @@ bool KnownJump(std::uintptr_t address,HMODULE module){
     std::memcpy(&delta,bytes.data()+2,4);auto actual=Read<std::uintptr_t>(reinterpret_cast<void*>(target+6+delta));return Owned(actual,module);
 }
 }
-void DeactivateNative() noexcept{ready.store(false,std::memory_order_release);definitionReady.store(false,std::memory_order_release);}
+void DeactivateNative() noexcept{deactivated.store(true,std::memory_order_release);ready.store(false,std::memory_order_release);definitionReady.store(false,std::memory_order_release);}
 bool InstallDefinitions(NativeProfile const& p,SharedState& state,std::string& reason){
     std::array<std::uint32_t,2> rvas{0x416F40,0xE033870};
     for(auto r:rvas)if(!p.Entry(p.Address(r))){reason="UI definition entry changed; no hooks installed";return false;}
@@ -470,7 +495,7 @@ bool InstallDefinitions(NativeProfile const& p,SharedState& state,std::string& r
 InstallResult InstallNative(NativeProfile const& p,SharedState& state,bool expectMouseTweaks,std::string& reason){
     // Definition callbacks may already run on other threads. Their published
     // host pointers stay immutable; input installation must reuse that host.
-    if(!minhookInitialized || !definitionReady.load(std::memory_order_acquire) || profile!=&p || shared!=&state){
+    if(!minhookInitialized || !DefinitionsActive() || profile!=&p || shared!=&state){
         reason="Definition host unavailable or mismatched; input hooks refused";return InstallResult::Failure;
     }
     auto mtb=GetModuleHandleW(L"MouseTweaksBedrock.dll");

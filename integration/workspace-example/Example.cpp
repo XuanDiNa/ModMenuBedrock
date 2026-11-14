@@ -1,4 +1,6 @@
 // A real generic provider. No networking, authentication, scripts or filesystem work.
+// Offline ABI fixture only. An installable LL native provider must replace the
+// fixture DllMain with official registration/lifecycle and shared memory operators.
 #include "../sdk/modmenu_workspace_v1.h"
 #include "json.hpp"
 #define WIN32_LEAN_AND_MEAN
@@ -10,7 +12,7 @@ J Caption(char const*en,char const*tw,char const*cn){return {{"en_US",en},{"zh_T
 DWORD WINAPI Worker(void*){
  HMODULE pin{};GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS|GET_MODULE_HANDLE_EX_FLAG_PIN,reinterpret_cast<LPCWSTR>(&Worker),&pin);
  for(unsigned tries=0;tries<600;++tries){
- auto menu=GetModuleHandleW(L"ModMenuBedrock.dll");if(!menu){Sleep(200);continue;}
+ auto menu=GetModuleHandleW(L"ModMenuBedrockLL.dll");if(!menu){Sleep(200);continue;}
  auto status=reinterpret_cast<int(*)()>(GetProcAddress(menu,"MMB_GetStatus"));if(!status||status()!=3){Sleep(200);continue;}
  auto reg=reinterpret_cast<MMB_WorkspaceRegisterV1Fn>(GetProcAddress(menu,"MMB_WorkspaceRegisterV1"));auto publish=reinterpret_cast<MMB_WorkspacePublishV1Fn>(GetProcAddress(menu,"MMB_WorkspacePublishV1"));auto poll=reinterpret_cast<MMB_WorkspacePollV1Fn>(GetProcAddress(menu,"MMB_WorkspacePollV1"));if(!reg||!publish||!poll)return 0;
  J controls=J::array({

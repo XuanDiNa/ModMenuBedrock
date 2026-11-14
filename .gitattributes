@@ -1,9 +1,11 @@
 * text=auto eol=lf
 # Preserve the accepted runtime snapshot byte-for-byte on checkout.
-src/** -text
-include/** -text
+src/** -text whitespace=cr-at-eol
+include/** -text whitespace=cr-at-eol
 integration/modmenu.settings.v3.schema.json -text
 integration/modmenu.settings.v4.schema.json -text whitespace=cr-at-eol
 vendor/json/json.hpp -text
 # Keep upstream dependency files untouched, including their whitespace.
 vendor/** -whitespace
+third_party/** -whitespace
+docs/upstream-levilamina-26.60.7/** -whitespace

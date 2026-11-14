@@ -1,6 +1,7 @@
 {
-  "name": "ModMenuBedrock",
-  "entry": "ModMenuBedrock.dll",
-  "version": "0.6.0-test5-leftalt",
-  "type": "preload-native"
+  "name": "ModMenuBedrockLL",
+  "entry": "ModMenuBedrockLL.dll",
+  "version": "0.1.0-test2-ll26.60",
+  "type": "native",
+  "platform": "client"
 }

@@ -1,5 +1,10 @@
 # Plugin integration / 插件接入
 
+**Resource-pack authors / 材質包作者:** optional
+[JSON UI entry API v1 / JSON UI 按鈕入口介面](RESOURCE_PACKS.md), introduced in
+`0.6.0-test7-resourcepack`, lets a pack render its own Mods button. Existing
+settings and workspace contracts below stay unchanged.
+
 **0.6.0-test5-leftalt:** optional [keyboard bindings v5 / 公用鍵盤綁定](KEYBINDINGS.md)
 adds broad keyboard coverage and exact Ctrl/Shift/Left Alt combinations. Existing v1/v2/v3/v4
 contracts and the Workspace ABI remain unchanged.

@@ -54,7 +54,7 @@ std::vector<Paint> BuildView(Menu const& m,Frame const& f){
         if(m.editing && f.foreground)text({8,3,f.width-16,10},t("Drag Mods; Escape returns to Settings"),white,.8f);return out;
     }
     fill({0,0,f.width,f.height},bg);
-    std::string title=m.configuring?t("Configure")+" / "+m.draft.id:m.settings?"ModMenuBedrock / "+t("Settings"):t("Mods");
+    std::string title=m.configuring?t("Configure")+" / "+m.draft.id:m.settings?"ModMenuBedrockLL / "+t("Settings"):t("Mods");
     float titleArea=m.configuring || m.settings?f.width-16:l.list.w;
     float titleWidth=std::min(titleArea,TextWidth(title));
     text({8+(titleArea-titleWidth)/2,8,titleWidth,12},title);

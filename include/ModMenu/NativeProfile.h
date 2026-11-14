@@ -6,11 +6,12 @@
 #include <string>
 namespace menu {
 struct ImageIdentity {std::uint16_t machine{};std::uint32_t timestamp{},imageSize{},checksum{};};
-enum class GameBuild {Unsupported,V45,V51,V52};
+enum class GameBuild {Unsupported,V45,V51,V52,V60};
 struct NativeLayout {
  unsigned clientStack{1488},clientGame{424},gameStack{968},stackTop{424},gameTop{424};
  unsigned guiGetter{1744},appOrigin{1552},viewNameOwner{80},viewController{64};
  unsigned transitionA{1120},transitionB{1125},cursorX{828},cursorY{832};
+ unsigned screenValid{152},screenGui{168},screenClip{120},uiMode{125};
 };
 NativeLayout const* LayoutFor(GameBuild) noexcept;
 std::uint32_t ResolveNativeRva(GameBuild,std::uint32_t) noexcept;

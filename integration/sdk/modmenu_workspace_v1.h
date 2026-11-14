@@ -4,7 +4,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Resolve these names from the already-loaded ModMenuBedrock.dll.
+/* Resolve these names from the already-loaded ModMenuBedrockLL.dll (independent LeviLamina edition).
  * UTF-8 bytes are copied within the call; no callback or pointer is retained.
  * Call from a plugin worker, not DllMain, input or rendering callbacks.
  * 0 OK; 1 short buffer; -1 invalid; -2 not Ready; -3 identity/refused.

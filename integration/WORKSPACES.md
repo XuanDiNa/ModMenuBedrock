@@ -1,5 +1,12 @@
 # Workspaces and public text / 工作頁與通用文字
 
+**Independent LL edition:** resolve `ModMenuBedrockLL.dll`. The API below is
+unchanged; the ModMenu host now requires LeviLamina 26.60.7. The example provider
+is an offline ABI fixture, not an installable LL native mod. For a real LL
+provider, use the official `LL_REGISTER_MOD` lifecycle and shared allocator;
+start its worker during `enable`, not from the fixture's `DllMain`. See
+[edition migration](../docs/levilamina-provider-migration.md).
+
 ## English
 
 **ModMenuBedrock 0.6.0-test3 — experimental, opt-in.** The unchanged v1/v2

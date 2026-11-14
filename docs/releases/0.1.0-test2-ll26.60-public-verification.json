@@ -1,0 +1,40 @@
+{
+  "version": "0.1.0-test2-ll26.60",
+  "minecraft": "1.26.60.05",
+  "levilamina": "26.60.7",
+  "dll": {
+    "name": "ModMenuBedrockLL.dll",
+    "size": 1097216,
+    "sha256": "044961EF326ECE34148D4BBEB6E9F642B028DD0C1F5D866FFDB22CAA9027125A"
+  },
+  "verification": {
+    "debug": {
+      "suites": 28,
+      "nativeImageChecks": 57,
+      "lifecycleChecks": 20,
+      "success": true
+    },
+    "release": {
+      "suites": 28,
+      "nativeImageChecks": 57,
+      "lifecycleChecks": 20,
+      "success": true
+    },
+    "resourcePackEntryChecks": 94,
+    "privateMenuFixtures": true,
+    "privateLauncherOrderFixtures": true
+  },
+  "runtimeSourceFiles": 43,
+  "runtimeSourceManifest": "0.1.0-test2-ll26.60-runtime-source-sha256.txt",
+  "reconstruction": {
+    "matchedPlayerSha256": "B554A2DA8B2271A4A164AE544A4A447F3A630B5FC2261AFEFE47C7C206826A53",
+    "originalSectionsPreserved": 8,
+    "originalImportedSymbolsPreserved": 1012,
+    "originalImportDllDescriptorsPreserved": 88,
+    "originalEntrypointPreserved": true
+  },
+  "manualGameplay": "pending affected player and combined music test",
+  "publicationChanges": "documentation and source provenance only; frozen runtime DLL unchanged",
+  "privateGameFixturesDistributed": false,
+  "otherPluginUpdatesIncluded": false
+}

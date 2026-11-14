@@ -2,6 +2,8 @@
 // by the shipping DLL and no Minecraft process is loaded or launched.
 #include "../src/NativeHost.cpp"
 #include <iostream>
+#include <fstream>
+#include <json.hpp>
 namespace {
 int destructorCalls{},pointerCalls{},downCalls{},upCalls{},rawCalls{},textCalls{},wheelCalls{};
 unsigned clipboardReads{};
@@ -17,6 +19,7 @@ void FaultButton(void*,unsigned,char){RaiseException(0xE0420001,0,0,nullptr);}
 bool GuardForwardFault(){__try{menu::ForwardButton(reinterpret_cast<void*>(1),0,0,true);return false;}__except(EXCEPTION_EXECUTE_HANDLER){return true;}}
 std::array<std::uintptr_t,6> upstreamForwarded{};
 void UiSubmit(void* screen){uiObserved=static_cast<unsigned char*>(screen)[125];}
+void UiSubmit60(void* screen){uiObserved=static_cast<unsigned char*>(screen)[117];}
 void UiFault(void*){RaiseException(0xE0420001,0,0,nullptr);}
 void* D(void* p){++destructorCalls;return p;}
 std::uintptr_t P(void*,void const*,char){++pointerCalls;return false;}
@@ -26,7 +29,7 @@ std::uint64_t UR(void* a,void const* k,void const* t,void const* s,void const* r
  ++rawCalls;upstreamForwarded={reinterpret_cast<std::uintptr_t>(a),reinterpret_cast<std::uintptr_t>(k),reinterpret_cast<std::uintptr_t>(t),reinterpret_cast<std::uintptr_t>(s),reinterpret_cast<std::uintptr_t>(r),reinterpret_cast<std::uintptr_t>(c)};return 0xCAFEBABE12345678ULL;
 }
 }
-int main(){
+int main(int argc,char** argv){
  menu::SharedState state;menu::NativeProfile p;menu::profile=&p;menu::shared=&state;
  menu::originalDtor=D;menu::MMB_PointerOriginal=P;menu::originalDown=BDown;menu::originalUp=BUp;menu::originalUpstreamRaw=UR;menu::originalText=T;menu::originalWheel=W;
  unsigned key=121;unsigned char type=4,keyState=1,remap=0;
@@ -75,6 +78,41 @@ int main(){
  uiScreen[125]=0;
  check(!menu::WithNativeUiMode(uiScreen.data(),UiFault,nullptr) && uiScreen[125]==0,"native UI mode is restored on a native submission fault");
  check(!menu::WithNativeUiMode(nullptr,UiSubmit,nullptr),"missing screen refuses before submission");
+ check(menu::WithNativeUiMode(uiScreen.data(),UiSubmit60,uiScreen.data(),117) && uiObserved==1 && uiScreen[117]==0 && uiScreen[125]==0,"60 native UI mode uses 117 and restores without touching 125");
+ uiScreen[117]=1;
+ check(menu::WithNativeUiMode(uiScreen.data(),UiSubmit60,uiScreen.data(),117) && uiScreen[117]==1,"60 preexisting UI mode survives submission");uiScreen[117]=0;
+ check(!menu::WithNativeUiMode(uiScreen.data(),UiFault,nullptr,117) && uiScreen[117]==0,"60 UI mode restores on native fault");
+ uiScreen[117]=2;
+ check(!menu::WithNativeUiMode(uiScreen.data(),UiSubmit60,uiScreen.data(),117),"60 invalid flag refuses before writing");uiScreen[117]=0;
+ check(!menu::WithNativeUiMode(uiScreen.data(),UiSubmit,nullptr,116),"unreviewed UI mode offset refuses");
+ {
+  std::array<std::byte,432> records{};
+  auto put60=[](auto& b,std::size_t off,auto v){std::memcpy(b.data()+off,&v,sizeof v);};
+  std::array<std::uintptr_t,3> v{reinterpret_cast<std::uintptr_t>(records.data()),reinterpret_cast<std::uintptr_t>(records.data()+216),reinterpret_cast<std::uintptr_t>(records.data()+432)};
+  std::string fake=R"({"namespace":"start","main_buttons_panel":{}})";
+  put60(records,0,fake.c_str());put60(records,16,fake.size());put60(records,24,fake.size());
+  check(menu::AuditedDefinition60(v.data()).empty(),"60 arbitrary start namespace cannot grant definition authority");
+  check(menu::AuditedDefinition60(reinterpret_cast<void const*>(1)).empty(),"60 unreadable vector fails closed");
+  if(argc==2){
+   std::ifstream input(argv[1]);nlohmann::json fixtures;input>>fixtures;
+   for(auto name:{"start_screen.json","pause_screen.json"}){
+    auto source=fixtures.at("1.26.60.05").at(name).get<std::string>();
+    auto expected=std::string(name)=="start_screen.json"?"start":"pause";
+    put60(records,0,source.c_str());put60(records,16,source.size());put60(records,24,source.size());
+    auto before=records;
+    check(menu::AuditedDefinition60(v.data())==expected,"60 exact native record and payload select audited menu");
+    check(records==before,"60 native inspection does not mutate borrowed records");
+    source.back()^=1;check(menu::AuditedDefinition60(v.data()).empty(),"60 modified payload refuses");source.back()^=1;
+    v[1]=v[0]+432;check(menu::AuditedDefinition60(v.data()).empty(),"60 layered menu cannot authorize automatic insertion");
+    v[1]=v[0]+215;check(menu::AuditedDefinition60(v.data()).empty(),"60 truncated record refuses");v[1]=v[0]+216;
+    put60(records,24,std::size_t(1));check(menu::AuditedDefinition60(v.data()).empty(),"60 invalid native string capacity refuses");
+    put60(records,24,source.size());put60(records,0,reinterpret_cast<char const*>(1));
+    check(menu::AuditedDefinition60(v.data()).empty(),"60 unreadable payload refuses");
+   }
+  }
+  v[1]=v[0]-1;check(menu::AuditedDefinition60(v.data()).empty(),"60 reversed vector refuses");
+  v[1]=v[0]+216;v[2]=v[0]+216*257;check(menu::AuditedDefinition60(v.data()).empty(),"60 oversized capacity refuses");
+ }
  auto priorRaw=state.rawEvents.load();
  menu::originalUpstreamRaw=UR;
  auto upstreamResult=menu::UpstreamRawHook(nullptr,&key,&type,&keyState,&remap,nullptr);
@@ -146,6 +184,52 @@ int main(){
  check(state.renderReceiptCount==12,"snapshot capacity stops native reads");
  menu::originalJsonParse=Parse;
  std::string definition=R"({"namespace":"start","main_button@common.button":{},"stacked_row":{"type":"panel"},"main_buttons_panel":{"controls":[{"stacked_rows":{"type":"stack_panel","controls":[{"play@start.play_button_stack":{}},{"settings@start.stacked_row":{}}]}}]}})";
+ {
+  std::array<std::byte,48*9> layers{};
+  std::array<std::uintptr_t,3> values{reinterpret_cast<std::uintptr_t>(layers.data()),reinterpret_cast<std::uintptr_t>(layers.data()+96),reinterpret_cast<std::uintptr_t>(layers.data()+layers.size())};
+  auto layer=[&](unsigned index,std::string const& text){auto off=index*48;
+   put(layers,off,unsigned(7+index));put(layers,off+8,text.c_str());put(layers,off+24,text.size());put(layers,off+32,std::max<std::size_t>(16,text.size()));};
+  layer(0,definition);put(layers,48+32,std::size_t(15));
+  auto originalLayers=layers;auto originalValues=values;
+  auto probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.validVector && probe.layers==2 && probe.inspected==2,"diagnostic observes two resource layers without authorizing them");
+  check(probe.items[0].state==menu::LayerProbeState::Compatible && probe.items[0].bytes==definition.size() && probe.items[0].tag==7,"diagnostic recognizes the existing supported base layout");
+  check(probe.items[1].state==menu::LayerProbeState::Empty,"diagnostic distinguishes an empty later layer");
+  check(layers==originalLayers && values==originalValues && parseCalls==0 && menu::definitionLifetime==nullptr,"diagnostic never mutates native records, parses natively or creates a transform scope");
+  std::string unsupported=R"({"namespace":"start","private_marker_do_not_log":1})";
+  layer(1,unsupported);probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[1].state==menu::LayerProbeState::Unsupported,"diagnostic distinguishes a populated unsupported override");
+  layer(1,definition);probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[1].state==menu::LayerProbeState::Compatible && probe.items[1].sameAsBase,"diagnostic recognizes byte-identical populated layers");
+  probe=menu::ProbeDefinition(values.data(),"pause");
+  check(probe.pause && probe.items[0].state==menu::LayerProbeState::Unsupported,"diagnostic binds layout recognition to the actual resource namespace");
+  put(layers,48+8,reinterpret_cast<char const*>(1));put(layers,48+24,std::size_t(20));put(layers,48+32,std::size_t(31));
+  probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[1].state==menu::LayerProbeState::Unreadable,"unreadable diagnostic payload refuses without a native exception");
+  put(layers,48+24,std::size_t(32));
+  probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[1].state==menu::LayerProbeState::InvalidString,"invalid native string metadata is rejected before dereferencing");
+  put(layers,48+8,std::uint64_t(0x7D7B));put(layers,48+24,std::size_t(2));put(layers,48+32,std::size_t(15));
+  probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[1].state==menu::LayerProbeState::Unsupported,"bounded inline native strings are observed without treating bytes as a pointer");
+  values[1]=values[0]+48*9;probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.layers==9 && probe.inspected==8,"diagnostic limits per-load inspection to eight records");
+  values[1]=values[0]+47;check(!menu::ProbeDefinition(values.data(),"start").validVector,"partial native records are rejected");
+  values[1]=values[0]-1;check(!menu::ProbeDefinition(values.data(),"start").validVector,"reversed native vector is rejected");
+  values[1]=values[0]+48*257;values[2]=values[1];check(!menu::ProbeDefinition(values.data(),"start").validVector,"excessive native vector count is rejected before reading");
+  values[1]=values[0]+96;values[2]=values[0]+48;check(!menu::ProbeDefinition(values.data(),"start").validVector,"capacity below end is rejected");
+  check(!menu::ProbeDefinition(nullptr,"start").validVector && !menu::ProbeDefinition(values.data(),"unknown").validVector,"absent or unrelated resources produce no payload observation");
+  values[1]=values[2]=values[0]+48*3;
+  std::string large=definition+std::string(900*1024,' ');layer(0,large);layer(1,large);layer(2,large);
+  probe=menu::ProbeDefinition(values.data(),"start");
+  check(probe.items[0].state==menu::LayerProbeState::Compatible && probe.items[1].sameAsBase && probe.items[2].state==menu::LayerProbeState::Budget,"total diagnostic payload reads stop at two MiB per load");
+  values[1]=values[2]=values[0]+96;layer(0,definition);layer(1,unsupported);
+  for(unsigned n=0;n<20;++n)menu::ObserveDefinition(values.data(),"start");
+  check(state.definitionProbeClaims.load()==8 && state.definitionProbeReady[7].load(),"diagnostic publication has a fixed eight-load session limit");
+  auto reportText=menu::DescribeDefinitionProbe(state.definitionProbes[0]);
+  check(reportText.find("multiple-layers-refused")!=std::string::npos && reportText.find("compatible-layout")!=std::string::npos && reportText.find("unsupported-layout")!=std::string::npos && reportText.find("private_marker")==std::string::npos && reportText.find(definition)==std::string::npos,"worker report contains structural metadata and refusal reason, never resource text");
+  check(state.faults.load()==0 && state.definitionsPatched.load()==0 && state.definitionScopes.load()==0 && !state.menu.open,"passive diagnostic cannot activate UI, transform or fault authority");
+ }
  auto parseResult=menu::ParseDefinition(0x416FC0,&key,definition.c_str(),definition.size(),&type,0);
  check(parseResult==0xAB && parseCalls==1 && parseBytes==definition.data(),"unscoped native JSON calls preserve source and original return exactly once");
  {
@@ -202,5 +286,8 @@ int main(){
   menu::PasteIfRequested(numbers,pauseFrame,ReadTestClipboard);
   check(numbers.editField==1 && numbers.numberText=="6" && clipboardReads==2,"numeric Ctrl V cannot request clipboard access through actual native paste adapter");
  }
+ menu::DeactivateNative();
+ menu::ready.store(true);menu::definitionReady.store(true); // Simulate a late installer publication after disable.
+ check(!menu::UiActive() && !menu::DefinitionsActive(),"LL disable remains a permanent barrier against late worker publication");
  std::cout<<checks<<" real native-adapter refusal/receipt/UI-scope checks / "<<failures<<" failures\n";return failures?1:0;
 }

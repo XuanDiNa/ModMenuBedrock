@@ -1,4 +1,4 @@
-ModMenuBedrock 0.6.0-test5-leftalt
+ModMenuBedrockLL 0.1.0-test2-ll26.60
 
 Original ModMenuBedrock source: Copyright (c) 2026 XuanDiNa, MIT License.
 See LICENSE. Third-party material retains its own copyright and license.
@@ -20,7 +20,8 @@ Design references, not linked or bundled:
 - Kashifro/MossUI (MIT), f36eaa350fd312029935c99f99726d5e2b38045e.
   https://github.com/Kashifro/MossUI
 No source/assets from those projects are copied into ModMenuBedrock.
-LL-ModMenu's resource-pack entry point and LeviLamina APIs are not used.
+LL-ModMenu source and assets are not used. This independent edition uses the
+official LeviLamina APIs described below.
 
 No Minecraft executable, game assets, resource packs, IDA database or decompiler
 output is distributed. Minecraft and LeviLauncher are separate products and
@@ -28,3 +29,10 @@ are not included. This is an unofficial plugin, not endorsed by Mojang or Micros
 
 本專案原創程式採 MIT 授權；第三方依賴保留各自授權。
 發佈不包含遊戲程式、資源、IDA 資料庫或反編譯輸出。
+
+LeviLamina 26.60.7 (LGPL-3.0)
+https://github.com/LiteLDev/LeviLamina/tree/v26.60.7
+Separately installed native runtime. Official API headers provide registration
+and shared memory operators. License copies are in third_party/LeviLamina/
+(source archive) and licenses/LeviLamina/ (runtime package).
+The original ModMenu sources remain MIT licensed.

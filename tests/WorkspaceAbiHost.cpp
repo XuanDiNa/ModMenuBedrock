@@ -5,8 +5,8 @@
 #include <iostream>
 #include "../integration/sdk/modmenu_workspace_v1.h"
 int wmain(int argc,wchar_t**argv){if(argc!=3)return 2;namespace fs=std::filesystem;
- auto root=fs::temp_directory_path()/(L"ModMenuWorkspaceAbi-"+std::to_wstring(GetCurrentProcessId())+L"-"+std::to_wstring(GetTickCount64()));fs::create_directories(root/L"ModMenuBedrock");fs::create_directory(root/L"ModMenuWorkspaceExample");
- auto menu=root/L"ModMenuBedrock"/L"ModMenuBedrock.dll",provider=root/L"ModMenuWorkspaceExample"/L"ModMenuWorkspaceExample.dll";fs::copy_file(argv[1],menu);fs::copy_file(argv[2],provider);std::ofstream(root/L"ModMenuWorkspaceExample"/L"manifest.json")<<R"({"entry":"ModMenuWorkspaceExample.dll","version":"1.0.0"})";
+ auto root=fs::temp_directory_path()/(L"ModMenuWorkspaceAbi-"+std::to_wstring(GetCurrentProcessId())+L"-"+std::to_wstring(GetTickCount64()));fs::create_directories(root/L"ModMenuBedrockLL");fs::create_directory(root/L"ModMenuWorkspaceExample");
+ auto menu=root/L"ModMenuBedrockLL"/L"ModMenuBedrockLL.dll",provider=root/L"ModMenuWorkspaceExample"/L"ModMenuWorkspaceExample.dll";fs::copy_file(argv[1],menu);fs::copy_file(argv[2],provider);std::ofstream(root/L"ModMenuWorkspaceExample"/L"manifest.json")<<R"({"entry":"ModMenuWorkspaceExample.dll","version":"1.0.0"})";
  auto lib=LoadLibraryW(menu.c_str());if(!lib)return 3;auto state=reinterpret_cast<int(*)()>(GetProcAddress(lib,"MMB_TestProviderState"));auto start=reinterpret_cast<int(*)()>(GetProcAddress(lib,"MMB_TestStart"));
  auto reg=reinterpret_cast<MMB_WorkspaceRegisterV1Fn>(GetProcAddress(lib,"MMB_WorkspaceRegisterV1"));auto publish=reinterpret_cast<MMB_WorkspacePublishV1Fn>(GetProcAddress(lib,"MMB_WorkspacePublishV1"));auto poll=reinterpret_cast<MMB_WorkspacePollV1Fn>(GetProcAddress(lib,"MMB_WorkspacePollV1"));auto unreg=reinterpret_cast<MMB_WorkspaceUnregisterV1Fn>(GetProcAddress(lib,"MMB_WorkspaceUnregisterV1"));if(!reg||!publish||!poll||!unreg)return 4;
  std::uint64_t token=17;std::uint32_t required=17;
