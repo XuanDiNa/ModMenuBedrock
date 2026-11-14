@@ -2,6 +2,23 @@
 
 [English](#english) · [繁體中文](#繁體中文)
 
+### Editions / 版本選擇
+
+| Edition / 版本 | Game / 遊戲 | Download / 下載 |
+| --- | --- | --- |
+| LeviLauncher native / 原版路線 | 1.26.45.01 / 1.26.51.01 / 1.26.52.03 | [0.6.0-test5-leftalt](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test5-leftalt) |
+| LeviLamina native client / 獨立 LL 版 | 1.26.60.05 + LeviLamina 26.60.7 | [0.1.0-test2-ll26.60](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.1.0-test2-ll26.60) |
+
+The new LL prerelease includes the resource-pack button API and reviewed 26.60
+adapter, plus the player-image compatibility fix. Its source and packages are
+separate from this vanilla branch. Read the [cumulative changes](docs/releases/2026-11-14-cumulative.md)
+or browse the [LL source](https://github.com/XuanDiNa/ModMenuBedrock/tree/codex/levilamina-edition).
+Gameplay acceptance for the affected player remains pending. Load one edition only.
+
+新版 LL 預發佈版包含材質包按鈕接口、26.60 適配及玩家映像相容修正；原始碼與套件
+獨立於本原版分支。詳見上方累積更新與 LL 原始碼，原玩家實機驗收仍待完成；只啟用
+其中一個版本。以下說明適用於原版路線。
+
 ## English
 
 A native plugin menu for Minecraft Bedrock and LeviLauncher, inspired by
