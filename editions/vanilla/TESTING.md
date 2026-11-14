@@ -1,45 +1,48 @@
-# Paired 26.51 native compatibility test / 配套測試
+# ModMenu 0.6.0-test11 — Manual test / 人工測試
 
-MouseTweaksBedrock 0.3.3-test1-vanilla51
-ModMenuBedrock 0.6.0-test10-mouse51
-
-Offline verification passed. Manual gameplay acceptance is pending.
-MouseTweaks DLL SHA-256: 77425954246FCD765070911FAF6135C7E60A4A5E4946FC84C5A1FDC88C461431
-ModMenu DLL SHA-256: 2039530A342CA2E44D8F7A3AC7DB85BB66546E2BBB720EF9CE14392B13005482
+Windows x64 / LeviLauncher native DLL.
+Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05.
+Offline checks do not establish gameplay acceptance for this newly built DLL.
 
 ## Install / 安裝
 
-Close Minecraft normally and back up both existing plugin folders. Extract both
-update ZIPs to the selected instance's mods folder. Keep existing JSON settings
-and logs; neither update archive contains a default configuration or game files.
-Use one loaded copy of each DLL. No LeviLamina reinstallation is required.
+Exit Minecraft normally and back up the existing ModMenuBedrock folder.
+Extract the update ZIP into the selected instance's mods directory. It contains
+no config.json: retain existing settings and logs. Enable one ModMenu edition
+and one DLL copy. Do not edit the game EXE or reinstall LeviLamina.
+The separate LeviLamina edition is not changed by this update.
 
-If MouseTweaks was disabled as manifest.json.close, keep only one active
-manifest.json after updating. Do not leave duplicate loadable manifests or
-change either game EXE.
+正常退出遊戲並備份 ModMenuBedrock；更新包解壓到所選實例的 mods。
+保留設定與日誌，只載入一份 DLL。更新包不含 config.json。
+這是原版路線更新，獨立 LeviLamina 版沒有變動。
 
-正常退出遊戲並備份兩個插件資料夾，把兩個更新包解壓至同一遊戲實例的 mods。
-保留自己的 JSON 設定與日誌。若 MouseTweaks 是 manifest.json.close，先恢復一份
-啟用的 manifest.json，再套用更新；避免重複描述檔及 DLL。無須重裝 LeviLamina。
+## Focused 26.60 test / 本次重點
 
-## Focused test / 人工測試
+1. Launch 1.26.60.05 with test11. Confirm this launch's ModMenu log reports
+   0.6.0-test11 and no INACTIVE: disk-identity.
+2. In the main menu check the Mods entry and the configured shortcut (F10 by
+   default). Open Configure, then return with Escape/Done.
+3. Enter a world and test Mods in the pause menu. Return to normal play and
+   confirm mouse and keyboard input. Settings, inventory and HUD must not open Mods.
+4. Exit fully and repeat a second launch. If using the launcher console option,
+   check the other console setting too; do not manually alter PE fields.
+5. If your resource pack changes the menu, it must supply button.modmenu.open;
+   automatic 26.60 insertion remains limited to exact single-layer vanilla menus.
 
-1. Start 26.51 without LeviLamina. Confirm MouseTweaks NATIVE READY and ModMenu
-   native input Ready in this launch's logs.
-2. Check main-menu and pause-menu Mods buttons, configured shortcut and Escape.
-3. In a container, Shift-left drag across mixed item types. Check left collection,
-   right placement and wheel transfer. Check normal input after closing the UI.
-4. Exit normally and repeat a second launch. Include console disabled if you use
-   that launcher option. If a problem occurs, retain both logs from that run.
-5. MouseTweaks supports exactly 26.45 / 26.51 / 26.52; regression-test the other
-   two versions as needed for this newly built DLL. ModMenu also supports 26.60,
-   but this update does not add 26.60 support to MouseTweaks.
+先測 26.60 本次新 DLL：日誌版本、主選單入口、F10、Configure、返回、暫停選單，
+再完全退出重啟一次。使用啟動器控制台選項時，可切換該選項驗證另一種啟動；
+無需手動修改 EXE。修改選單的材質包須接入 button.modmenu.open，這次沒有放寬
+自動注入條件。若出錯，保留這輪 ModMenu 日誌、遊戲版本與控制台選項狀態。
 
-先確認兩個插件 Ready，再檢查主／暫停選單、快捷鍵、Shift＋左鍵混合搬運、
-左鍵收集、右鍵放置、滾輪及關閉介面後的正常輸入。完全退出後第二次啟動，
-有使用主控台選項時包含一次關閉主控台。出錯請保留這次兩份新日誌。
-本次 DLL 尚待遊戲內驗收；先前版本的人工結果不能替代此次測試。
+## Companion scope / 配套範圍
 
-The inspected 26.51 session reached Ready in both plugins and recorded a Mods
-open event with zero ModMenu faults. This is startup/menu evidence, not completion
-of the full container gesture and second-launch acceptance steps above.
+The optional MouseTweaks 0.3.3-test1-vanilla51 asset supports 26.45/51/52 only,
+not 26.60. On 26.51, it is the exact reviewed companion for shared hooks;
+older incompatible loaded DLLs may prevent safe initialization. Test ModMenu
+alone when a companion does not support the selected game version.
+
+選用 MouseTweaks 配套不支援 26.60。26.51 可沿用已核實的配套新版。
+不支援該遊戲版本的其他 DLL 請先停用，以單獨驗收 ModMenu。
+
+DLL: **988,160 bytes**; SHA-256
+`17CB9D3505B6B17942A2975CD7E5F670A277B4B42D61E40042F2C3AA781DAF6E`.

@@ -40,6 +40,6 @@ for name in ['tools/verify_public.py', 'docs/runtime-source-sha256.txt', 'docs/v
     assert (root/name).read_text(encoding='utf-8') == original.decode('utf-8').replace('\r\n', '\n'), f'Historic audit changed: {name}'
 assert (root/'LICENSE').read_text().startswith('MIT License\n')
 for name in ['manifest.json', 'mod.json']:
-    assert json.loads((root/name).read_text())['version'] == '0.6.0-test10-mouse51'
+    assert json.loads((root/name).read_text())['version'] == '0.6.0-test11'
 print(f'Candidate public source audit passed: {len(names)} allowlisted files; no private paths, binaries, credential patterns or broken Markdown links.')
 print('Current source tree SHA256: ' + hashlib.sha256('\n'.join(digests).encode()).hexdigest().upper())

@@ -10,13 +10,13 @@ No LeviLamina API, resource pack or server component is required.
 
 **Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05**
 
-**ModMenu 0.6.0-test10 — Prerelease · MIT License**
+**ModMenu 0.6.0-test11 — Prerelease · MIT License**
 
-This release adds [26.51 image and MouseTweaks pairing fixes](docs/releases/0.6.0-test10-mouse51.md),
-the 26.60 native adapter and the resource-pack button API. The inspected 26.51
-session reached Ready and opened Mods; full gesture/restart acceptance remains pending.
+This release fixes [26.60 console/launcher image rejection](docs/releases/0.6.0-test11.md).
+It includes the 26.51 pairing fixes, 26.60 native adapter and resource-pack button
+API from test6–test10. Debug/Release offline checks pass; new-DLL gameplay is pending.
 
-[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) ·
+[Download](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test11) ·
 [Report an issue](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### Features
@@ -97,13 +97,13 @@ Minecraft 基岩版／LeviLauncher 原生插件選單。
 
 **Windows x64 · Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05**
 
-**ModMenu 0.6.0-test10 — 預發佈版 · MIT 授權**
+**ModMenu 0.6.0-test11 — 預發佈版 · MIT 授權**
 
-本版補齊 [26.51 映像與 MouseTweaks 配對](docs/releases/0.6.0-test10-mouse51.md)，
-包含 26.60 原版適配及材質包按鈕接口。已觀察到 26.51 就緒與 Mods 開啟；
-完整拖曳及重新啟動驗收仍待完成。
+本版修復 [26.60 控制台／啟動器映像拒絕](docs/releases/0.6.0-test11.md)，
+並包含 test6–test10 的 26.51 配對、26.60 原生適配及材質包按鈕接口。
+Debug／Release 離線驗證通過，新 DLL 尚待人工驗收。
 
-[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) ·
+[下載](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test11) ·
 [回報問題](https://github.com/XuanDiNa/ModMenuBedrock/issues)
 
 ### 功能

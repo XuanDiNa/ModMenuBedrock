@@ -12,7 +12,8 @@ int wmain(int argc,wchar_t** argv){using namespace menu;
  Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x1383B000,0x134D2DEF}),"60 independently verified original identity");
  Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBA}),"60 independently verified launcher identity");
  Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x13847000,0x134E7C20}),"60 exact PreLoader/LeviLauncher image identity");
- Check(!AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBB}),"60 unknown checksum cannot select native authority");
+ Check(AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBB}),"60 console-first regenerated launcher identity");
+ Check(!AcceptedIdentity({0x8664,0x6AD79EE4,0x1383C000,0x134D3CBC}),"60 unknown checksum cannot select native authority");
  Check(!AcceptedIdentity({0x8664,0x6AB54E37,0x12C01000,1}),"checksum mismatch refused");
  std::array<std::byte,32> a{},b{};Check(MatchEntry(a,b),"entry equality");b[0]=std::byte{0xe9};Check(!MatchEntry(a,b),"patched entry rejected");Check(!MatchEntry(a,std::span(b).first(8)),"short signature refused");
  ProfileDiagnostic d;Check(!VerifyLoadedEntry(123,a,b,d) && d.rva==123 && d.failure==ProfileFailure::EntryMismatch,"diagnostic records conflict");
@@ -73,15 +74,29 @@ int wmain(int argc,wchar_t** argv){using namespace menu;
     Check(!VerifyFile({data,std::size_t(n.QuadPart)}),"51 arbitrary subsystem is not normalized or accepted");
     sourceNt->OptionalHeader.Subsystem=subsystem;
    }
-   if(std::wstring(version)==L"1.26.60.05" && sourceNt->OptionalHeader.SizeOfImage==0x1383C000){
-    auto subsystem=sourceNt->OptionalHeader.Subsystem;
-    sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_GUI;
-    Check(VerifyFile({data,std::size_t(n.QuadPart)}),"60 exact GUI launcher admitted");
-    sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_WINDOWS_CUI;
-    Check(VerifyFile({data,std::size_t(n.QuadPart)}),"60 exact console launcher admitted");
+   if(std::wstring(version)==L"1.26.60.05"){
+    auto subsystem=sourceNt->OptionalHeader.Subsystem;auto checksum=sourceNt->OptionalHeader.CheckSum;
+    // Console enabled before/after .orig capture produces different launcher
+    // checksums. Exercise each reviewed full image in private pages only.
+    bool launcher=sourceNt->OptionalHeader.SizeOfImage==0x1383C000;
+    for(auto sum:launcher?std::vector<DWORD>{0x134D3CBA,0x134D3CBB}:std::vector<DWORD>{checksum}){
+     sourceNt->OptionalHeader.CheckSum=sum;
+     for(WORD sub:std::array<WORD,2>{IMAGE_SUBSYSTEM_WINDOWS_GUI,IMAGE_SUBSYSTEM_WINDOWS_CUI}){
+      sourceNt->OptionalHeader.Subsystem=sub;
+      Check(VerifyFile({data,std::size_t(n.QuadPart)}),"60 exact console capture/rebuild order admitted");
+     }
+    }
     sourceNt->OptionalHeader.Subsystem=IMAGE_SUBSYSTEM_NATIVE;
     Check(!VerifyFile({data,std::size_t(n.QuadPart)}),"60 arbitrary subsystem refused");
-    sourceNt->OptionalHeader.Subsystem=subsystem;
+    sourceNt->OptionalHeader.Subsystem=subsystem;sourceNt->OptionalHeader.CheckSum=checksum;
+    // Full-file checks protect non-code content too, including the launcher.
+    auto sections=IMAGE_FIRST_SECTION(sourceNt);
+    for(unsigned i=0;i<sourceNt->FileHeader.NumberOfSections;++i){
+     if(!sections[i].SizeOfRawData || !std::memcmp(sections[i].Name,".text\0\0\0",8))continue;
+     auto at=sections[i].PointerToRawData;data[at]^=std::byte{1};
+     Check(!VerifyFile({data,std::size_t(n.QuadPart)}),"60 modified data/import/launcher section refused");
+     data[at]^=std::byte{1};
+    }
    }
    auto section=IMAGE_FIRST_SECTION(sourceNt);std::size_t code{};
    for(unsigned i=0;i<sourceNt->FileHeader.NumberOfSections;++i)if(!std::memcmp(section[i].Name,".text\0\0\0",8))code=section[i].PointerToRawData;

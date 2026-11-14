@@ -1,0 +1,16 @@
+{
+  "releaseName": "ModMenu 0.6.0-test11",
+  "tag": "v0.6.0-test11",
+  "version": "0.6.0-test11",
+  "sourceTree": "c80d9ec3dc0e331c659e8367222ce38bfb57bcbf",
+  "dllSHA256": "17CB9D3505B6B17942A2975CD7E5F670A277B4B42D61E40042F2C3AA781DAF6E",
+  "dllBytes": 988160,
+  "companionDLLSHA256": "77425954246FCD765070911FAF6135C7E60A4A5E4946FC84C5A1FDC88C461431",
+  "companionDLLBytes": 158720,
+  "companionMinecraft": [
+    "1.26.45.01",
+    "1.26.51.01",
+    "1.26.52.03"
+  ],
+  "gameplayEvidence": "New test11 binary: offline verification only; 26.60 in-game acceptance pending"
+}

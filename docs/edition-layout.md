@@ -17,13 +17,12 @@ that edition. The root directory is a documentation entry point.
 
 | Snapshot | Original commit | Release |
 | --- | --- | --- |
-| `editions/vanilla` | [test10 source manifest](../docs/vanilla-test10-snapshot.json) | `v0.6.0-test10`; replaces the test5 subtree while retaining its history |
+| `editions/vanilla` | [test11 source manifest](../docs/vanilla-test11-snapshot.json) | `v0.6.0-test11`; fixes the withdrawn test10 release |
 | `editions/levilamina` | `9679aa91246396ba10198eb8599f1ba33d73a306` | `v0.1.0-test2-ll26.60` |
 
-Both parent histories remain. Native test10 deliberately updates the native
-subtree and publishes the frozen paired DLL; LL remains byte-identical to its
-recorded complete source commit. Old tags and assets retain their original
-layouts. Historical audit documents describe their own frozen versions.
+Both parent histories remain. Native test11 adds the exact 26.60 checksum-order images and publishes a new DLL;
+LL remains byte-identical to its
+recorded complete source commit. Old tags retain their original layouts; the test10 Release is withdrawn. Historical audit documents describe their own frozen versions.
 
 Run the current integrity audit with a normal full Git checkout:
 
@@ -44,8 +43,8 @@ Neither command runs Minecraft or establishes gameplay acceptance.
 作為原始碼與編譯根目錄。根目錄提供統一首頁，編譯時請進入所選版本並依該版本的
 BUILDING.md 與驗證腳本操作。相依、設定與輸出仍各自獨立。
 
-保留雙方 Git 歷史；本次刻意更新原版 test10 子目錄並沿用配套 DLL，LL 子目錄
-仍與表列提交完全相同。舊 Release 及標籤保持原樣，新版倉庫使用版本子目錄。
+保留雙方 Git 歷史；本次更新原版 test11 子目錄並提供新 DLL，LL 子目錄
+仍與表列提交完全相同。撤下 test10 Release，舊標籤保留，新版倉庫使用版本子目錄。
 
 歷史稽核文件只描述其當時快照；目前倉庫入口以根目錄 README 為準。
 

@@ -19,7 +19,7 @@ def replace(text, before, after=''):
 
 compat=(root/'src/NativeCompatibility.inl').read_text()
 legacy=re.sub(r'// Exact 1\.26\.60\.05 IDA/ABI review:[\s\S]+?(?=constexpr BuildDescriptor builds\[\])','',compat,count=1)
-legacy=re.sub(r'    \{GameBuild::V60,[\s\S]+?\{&launcher60Current,1\}\},\n','',legacy,count=1)
+legacy=re.sub(r'    \{GameBuild::V60,[\s\S]+?layout60,launcher60Variants\},\n','',legacy,count=1)
 legacy=re.sub(r'// Exact 1\.26\.51\.01 images without PreLoader:[\s\S]+?\n\};\n','',legacy,count=1)
 legacy=replace(legacy,'guards51,layout52,vanilla51Current','guards51,layout52')
 assert legacy == old('src/NativeCompatibility.inl'), 'Legacy identities/addresses/guards changed'

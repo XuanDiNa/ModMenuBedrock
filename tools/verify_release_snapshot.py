@@ -1,4 +1,4 @@
-"""Audit the published test10 native snapshot and unchanged LL source tree."""
+"""Audit the published test11 native snapshot and unchanged LL source tree."""
 import argparse
 import hashlib
 import json
@@ -26,9 +26,9 @@ def main():
     args = parser.parse_args()
     tree = git('rev-parse', '--verify', args.tree + '^{tree}').decode().strip()
     files = git('ls-tree', '-r', '--name-only', '-z', tree).decode('utf-8').strip('\0').split('\0')
-    snapshot = json.loads(git('show', tree + ':docs/vanilla-test10-snapshot.json'))
-    require(snapshot['version'] == '0.6.0-test10-mouse51', 'Wrong native release')
-    require(snapshot['dllSHA256'] == '2039530A342CA2E44D8F7A3AC7DB85BB66546E2BBB720EF9CE14392B13005482',
+    snapshot = json.loads(git('show', tree + ':docs/vanilla-test11-snapshot.json'))
+    require(snapshot['version'] == '0.6.0-test11', 'Wrong native release')
+    require(snapshot['dllSHA256'] == '17CB9D3505B6B17942A2975CD7E5F670A277B4B42D61E40042F2C3AA781DAF6E',
             'Frozen release DLL identity changed')
     require(git('rev-parse', tree + ':editions/vanilla').decode().strip() == snapshot['sourceTree'],
             'Native source differs from the reviewed publication snapshot')

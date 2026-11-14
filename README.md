@@ -13,7 +13,7 @@ DLL, settings and installation package. Enable one edition at a time.
 
 | Edition | Supported environment | Download | Source and build guide |
 | --- | --- | --- | --- |
-| LeviLauncher native, vanilla route | Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05 | [ModMenu 0.6.0-test10](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test10) | [editions/vanilla](editions/vanilla/README.md) · [Build](editions/vanilla/BUILDING.md) |
+| LeviLauncher native, vanilla route | Minecraft 1.26.45.01 / 1.26.51.01 / 1.26.52.03 / 1.26.60.05 | [ModMenu 0.6.0-test11](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.6.0-test11) | [editions/vanilla](editions/vanilla/README.md) · [Build](editions/vanilla/BUILDING.md) |
 | LeviLamina native client | Minecraft 1.26.60.05 + LeviLamina 26.60.7 | [0.1.0-test2-ll26.60](https://github.com/XuanDiNa/ModMenuBedrock/releases/tag/v0.1.0-test2-ll26.60) | [editions/levilamina](editions/levilamina/README.md) · [Build](editions/levilamina/BUILDING.md) |
 
 ### Features
@@ -33,10 +33,12 @@ updating. Each plugin remains responsible for hot reloading settings and
 implementing its own bindings. Workspace providers with binary pins need an
 explicitly compatible version.
 
-[Vanilla test10 changes](docs/releases/2026-11-14-vanilla-test10.md) cover the
-resource-pack API, 26.60 native adapter, 26.51 without PreLoader and admission
-for MouseTweaks 0.3.3-test1-vanilla51. A paired native 26.51 session reached Ready
-and opened Mods; full gesture and restart acceptance remains pending.
+[Vanilla test11 changes](docs/releases/2026-11-15-vanilla-test11.md) fix 26.60 image
+rejection when the launcher captures the console-enabled original before
+rebuilding imports. It retains the resource-pack API, 26.60 native adapter,
+26.51 without PreLoader and MouseTweaks pairing from test6–test10.
+Debug and Release each pass 24 offline suites; gameplay for this new DLL is pending.
+The optional MouseTweaks companion supports 26.45/51/52, **not 26.60**.
 The separate LL test2 sources and assets are unchanged; its affected-player and
 music-plugin acceptance is still pending. [Earlier LL changes](docs/releases/2026-11-14-cumulative.md).
 
@@ -68,9 +70,11 @@ Windows x64 基岩版原生插件選單，可瀏覽已載入插件、調整支�
 ZIP，更新前完全退出 Minecraft。各插件自行負責設定熱更新與快捷鍵觸發，限定
 ModMenu 二進位版本的 Workspace 提供者仍需相容版本。
 
-[原版 test10 更新紀錄](docs/releases/2026-11-14-vanilla-test10.md)包含材質包接口、
-26.60 原版適配、26.51 不含 PreLoader 的映像與 MouseTweaks 新版配對。
-已觀察到配套 26.51 就緒及 Mods 開啟；完整拖曳與重新啟動驗收仍待完成。
+[原版 test11 更新紀錄](docs/releases/2026-11-15-vanilla-test11.md)修復 26.60
+先開啟控制台、再由啟動器重建匯入區段時的映像拒絕；包含 test6–test10 的材質包
+接口、26.60 原生適配、26.51 移除 PreLoader 後的映像及 MouseTweaks 配對。
+Debug／Release 各 24 組離線測試通過，新 DLL 尚待人工驗收。
+選用的 MouseTweaks 配套只支援 26.45／26.51／26.52，**不支援 26.60**。
 獨立 LL test2 的原始碼與附件保持不變，其玩家及音樂插件共同驗收仍待完成。
 [先前 LL 更新紀錄](docs/releases/2026-11-14-cumulative.md)。
 

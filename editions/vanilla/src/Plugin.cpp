@@ -21,7 +21,7 @@ DWORD WINAPI Worker(void*){
         auto dir=Directory();if(dir.empty()){state.status.store(4);return 0;}
         std::ofstream log(dir/L"ModMenuBedrock.log",std::ios::app);
         auto write=[&](std::string const& s){log<<GetTickCount64()<<' '<<s<<'\n';log.flush();};
-        write("ModMenuBedrock 0.6.0-test10-mouse51; pid="+std::to_string(GetCurrentProcessId())+"; exact four-version profiles / resource-pack entry API v1 / bounded definition authority / no payload logging; x64; no LeviLamina");
+        write("ModMenuBedrock 0.6.0-test11; pid="+std::to_string(GetCurrentProcessId())+"; exact four-version profiles / resource-pack entry API v1 / bounded definition authority / no payload logging; x64; no LeviLamina");
         menu::ProfileDiagnostic diagnostic;
         if(!profile.Initialize(GetModuleHandleW(nullptr),&diagnostic)){state.status.store(1);write("INACTIVE: "+menu::DescribeProfileDiagnostic(diagnostic));return 0;}
         write(std::string("Verified native profile: ")+profile.Version());
@@ -106,7 +106,7 @@ DWORD WINAPI Worker(void*){
 }
 }
 extern "C" __declspec(dllexport) int MMB_GetStatus(){return state.status.load(std::memory_order_acquire);}
-extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.6.0-test10-mouse51";}
+extern "C" __declspec(dllexport) char const* MMB_GetVersion(){return "0.6.0-test11";}
 BOOL APIENTRY DllMain(HMODULE instance,DWORD reason,LPVOID){
     if(reason==DLL_PROCESS_ATTACH){module=instance;auto thread=CreateThread(nullptr,0,Worker,nullptr,0,nullptr);if(thread)CloseHandle(thread);else state.status.store(4);}
     return TRUE;

@@ -1,6 +1,6 @@
 # Minecraft 1.26.60.05 compatibility
 
-Candidate: **0.6.0-test8-mc26.60**. Offline verification and manual gameplay
+Current candidate: **0.6.0-test11**. Offline verification and manual gameplay
 acceptance are separate. This candidate changes ModMenu only.
 
 The new profile independently pins the complete original and reviewed launcher
@@ -47,3 +47,9 @@ legacy policies exactly with the frozen baseline.
 規格與標記不變。F10 仍限於允許的原生主選單／暫停選單。
 
 離線驗證不等於遊戲內驗收。新 DLL 需人工確認入口、操作、返回與原有插件共存。
+
+## Console capture order (test11)
+
+The startup failure and exact checksum-order fix are documented in
+[test11 notes](releases/0.6.0-test11.md). Console GUI/CUI forms are separately
+pinned complete hashes; the runtime does not normalize arbitrary PE changes.

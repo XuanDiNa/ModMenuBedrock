@@ -20,6 +20,6 @@ for name in ['src/NativeGuards.inl', 'src/PointerBridge.asm']:
     actual = (root/name).read_bytes()
     assert actual == original, f'Native guard/hook changed: {name}'
 for name in ['manifest.json', 'mod.json']:
-    assert json.loads((root/name).read_text())['version'] == '0.6.0-test10-mouse51'
+    assert json.loads((root/name).read_text())['version'] == '0.6.0-test11'
 subprocess.run(['py', '-3', str(root/'tools/verify_native60.py')], check=True, cwd=root)
 print('Workspace candidate contract audit passed: unchanged v1/v2, legacy entry guards and pointer bridge; additive audited 60 profile/adapters; original scene/input policy and hook set retained.')

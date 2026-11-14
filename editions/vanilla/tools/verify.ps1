@@ -25,7 +25,7 @@ try {
     Run 'py' @('-3', 'tools/verify_workspaces.py')
     $packArgs = @('-3', 'tools/verify_resource_pack_entry.py'); if ($MenuFixtures) { $packArgs += @('--fixtures', $MenuFixtures) }
     Run 'py' $packArgs
-    $report = [ordered]@{Version='0.6.0-test10-mouse51';Success=$false;Modes=@();PrivateImageChecks=[bool]$GameImagesRoot;PrivateMenuFixtures=[bool]$MenuFixtures;Reviewed51ImageChecks=[bool]$Reviewed51Image;MouseTweaksImages=$mouseInputs}
+    $report = [ordered]@{Version='0.6.0-test11';Success=$false;Modes=@();PrivateImageChecks=[bool]$GameImagesRoot;PrivateMenuFixtures=[bool]$MenuFixtures;Reviewed51ImageChecks=[bool]$Reviewed51Image;MouseTweaksImages=$mouseInputs}
     foreach ($mode in $Modes) {
         if ($Incremental) {
             Run 'xmake' @('f', '-P', $project, '-y', '-m', $mode)
