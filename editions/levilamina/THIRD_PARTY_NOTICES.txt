@@ -1,0 +1,38 @@
+ModMenuBedrockLL 0.1.0-test2-ll26.60
+
+Original ModMenuBedrock source: Copyright (c) 2026 XuanDiNa, MIT License.
+See LICENSE. Third-party material retains its own copyright and license.
+
+Runtime dependencies included in the native DLL:
+- MinHook 1.3.4, Copyright (C) 2009-2017 Tsuda Kageyu.
+  BSD-style license including bundled HDE64 portions.
+  Source checkout: vendor/MinHook-LICENSE.txt.
+  Release package: licenses/MinHook-LICENSE.txt.
+- JSON for Modern C++ 3.11.3, Copyright (c) 2013-2023 Niels Lohmann.
+  MIT license. Source checkout: vendor/json/LICENSE.MIT.
+  Release package: licenses/nlohmann-json-LICENSE.MIT.
+
+Design references, not linked or bundled:
+- TerraformersMC/ModMenu (MIT), e4d5975f6a947fa2b0de817edeb5115165052131.
+  https://github.com/TerraformersMC/ModMenu
+- Kashifro/LL-ModMenu, 82b95c8f70c3eb6ba51382c2a2097b6bcf642a6d.
+  https://github.com/Kashifro/LL-ModMenu
+- Kashifro/MossUI (MIT), f36eaa350fd312029935c99f99726d5e2b38045e.
+  https://github.com/Kashifro/MossUI
+No source/assets from those projects are copied into ModMenuBedrock.
+LL-ModMenu source and assets are not used. This independent edition uses the
+official LeviLamina APIs described below.
+
+No Minecraft executable, game assets, resource packs, IDA database or decompiler
+output is distributed. Minecraft and LeviLauncher are separate products and
+are not included. This is an unofficial plugin, not endorsed by Mojang or Microsoft.
+
+本專案原創程式採 MIT 授權；第三方依賴保留各自授權。
+發佈不包含遊戲程式、資源、IDA 資料庫或反編譯輸出。
+
+LeviLamina 26.60.7 (LGPL-3.0)
+https://github.com/LiteLDev/LeviLamina/tree/v26.60.7
+Separately installed native runtime. Official API headers provide registration
+and shared memory operators. License copies are in third_party/LeviLamina/
+(source archive) and licenses/LeviLamina/ (runtime package).
+The original ModMenu sources remain MIT licensed.

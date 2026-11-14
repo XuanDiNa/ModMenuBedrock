@@ -5,7 +5,7 @@
 The previous public release was **0.6.0-test5-leftalt**. This release publishes
 the independent **ModMenuBedrockLL 0.1.0-test2-ll26.60** edition. It includes the
 26.60 menu adapter and resource-pack entry work developed in the intervening
-local versions. The vanilla distribution remains separate on `main`; this LL
+local versions. The vanilla distribution is in `editions/vanilla` on `main`; this LL
 package supports only **Minecraft 1.26.60.05 / LeviLamina 26.60.7 / Windows x64**.
 
 | Local version | Changes and status |
@@ -50,7 +50,7 @@ See [LL test2 details](https://github.com/XuanDiNa/ModMenuBedrock/blob/codex/lev
 
 上一個 GitHub 公開版是 **0.6.0-test5-leftalt**。本次公開獨立的
 **ModMenuBedrockLL 0.1.0-test2-ll26.60**，包含這段期間本機版本新增的
-26.60 選單適配與材質包入口。原版路線繼續保留在 `main`；本 LL 套件只支援
+26.60 選單適配與材質包入口。原版路線位於 `main` 的 `editions/vanilla`；本 LL 套件只支援
 **Minecraft 1.26.60.05／LeviLamina 26.60.7／Windows x64**。
 
 | 本機版本 | 新增內容與狀態 |

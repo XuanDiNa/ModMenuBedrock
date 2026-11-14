@@ -1,0 +1,34 @@
+{
+  "version": "0.6.0-test5-leftalt",
+  "scope": "ModMenuBedrock only",
+  "minecraft": [
+    "1.26.45.01",
+    "1.26.51.01",
+    "1.26.52.03"
+  ],
+  "manualReportDate": "2026-11-11",
+  "manualAcceptance": {
+    "1.26.45.01": "maintainer reported no issues",
+    "1.26.51.01": "maintainer reported no issues"
+  },
+  "dllBytes": 974336,
+  "dllSHA256": "FD314F0EFC6397D1229B2F18A62DCEC5B8C404829E3A13A28B14F137C4BF2F74",
+  "offlineSuccess": true,
+  "suitesPerMode": 22,
+  "modes": [
+    "debug",
+    "release"
+  ],
+  "exactImageChecksPerMode": 94,
+  "exactOriginalAndLauncherImages": 6,
+  "keyboardBindingChecksPerMode": 431,
+  "schemaParserCasesPerMode": 3525,
+  "privateVanillaMenuFixtures": "unavailable; skipped",
+  "syntheticMenuDefinitionTests": "passed",
+  "runtimeSourcesMatchVerifiedBuild": true,
+  "rebuiltReleaseCodeMatchesAcceptedDLL": true,
+  "acceptedDLLUnchanged": true,
+  "otherPluginUpdatesIncluded": false,
+  "gameLaunchedByAutomation": false,
+  "defaultUserConfigIncluded": false
+}

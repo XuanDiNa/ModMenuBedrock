@@ -1,0 +1,11 @@
+{
+  "id": "mod-menu-bedrock-ll",
+  "name": "ModMenuBedrockLL",
+  "version": "0.1.0-test2-ll26.60",
+  "author": "XuanDiNa",
+  "description": "Native ModMenu client edition for LeviLamina 26.60.7.",
+  "platform": "windows-x64",
+  "minecraft": [
+    "1.26.60.05"
+  ]
+}

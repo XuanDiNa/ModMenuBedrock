@@ -1,0 +1,15 @@
+{
+  "source_archive": "ModMenuBedrock-0.6.0-test8-mc26.60-source.zip",
+  "source_sha256": "30259d088e59a28337b0762e741110f2ddd1ac337108e3487567025843b6f31a",
+  "upstream_levilamina_tag": "v26.60.7",
+  "upstream_commit": "dacca851fe5f8b97e292496f702db3a73b118f39",
+  "game_version": "1.26.60.05",
+  "no_install": true,
+  "preserved_contract_sha256": {
+    "integration/modmenu.settings.schema.json": "EC56D57599FDD56F5A4B8C06DD1A5DB01975CF3E8127E579DFFD6808558B6B40",
+    "integration/modmenu.settings.v2.schema.json": "A0D75CA0B894DB1C7D41DF2313311443B900CF43389A795D4F79F5FC527C662F",
+    "src/NativeGuards.inl": "0E7B971A14E50DD85E7BFA63CC27C13617F241BF48969FBB0899BD0354043CF6",
+    "src/PointerBridge.asm": "DB298F4C9106D17D20D21046328487A3FDE9C58D4D89E4760B09F88F32DD4B54",
+    "integration/resource-pack-entry/entry.v1.json": "004EF91F3D2A27005D51C74C5617A28D0E148259611C910EB39751A0DAEC3BC0"
+  }
+}
